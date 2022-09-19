@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "AliyunMediaConfig.h"
+#import "AlivcBaseViewController.h"
 
 @protocol AliyunRecordViewControllerDelegate <NSObject>
 

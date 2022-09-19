@@ -17,6 +17,10 @@
 //#import "AliyunMediator.h"
 #import "AliyunRecoderFilterPlugin.h"
 #import "AliyunIConfig.h"
+#import "SelectIteamViewController.h"
+
+
+
 
 
 @interface AlivcBase_RecordViewController ()<AliyunIRecorderDelegate,UIGestureRecognizerDelegate,AliyunRecoderFilterPluginDelegate>
@@ -65,7 +69,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+        
     _isFirstLoad = YES;
     
     [self setupSubViews];
@@ -302,17 +306,11 @@
 }
 
 - (void)showAlertViewWithWithTitle:(NSString *)title {
-//    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"打开相机失败", nil) message:title delegate:self cancelButtonTitle:nil otherButtonTitles:@"OK", nil];
-//    [alert show];
-//     [MBProgressHUD showMessage:NSLocalizedString(@"已保存到手机相册", nil) inView:self.view];
-    
+
     UIAlertController *alertController =[UIAlertController alertControllerWithTitle:NSLocalizedString(@"打开相机失败", nil) message:title preferredStyle:UIAlertControllerStyleAlert];
-       UIAlertAction *action1 =[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
-      
-       [alertController addAction:action1];
-       [self presentViewController:alertController animated:YES completion:nil];
-    
-    
+    UIAlertAction *action1 =[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+    [alertController addAction:action1];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)recorderDidFinishRecording {
@@ -332,9 +330,14 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         
         NSLog(@"已录制:%f",duration);
-        [_bottomView updateVideoDuration:duration];
-        [_navigationView updateNavigationStatusWithDuration:duration];
+        [self->_bottomView updateVideoDuration:duration];
+        [self->_navigationView updateNavigationStatusWithDuration:duration];
         [self showDuration:duration];
+        
+        
+        NSLog(@"视频的路路径 ==== :%@",self->_recorder.outputPath);
+        
+        
     });
 }
 
@@ -358,9 +361,10 @@
 #pragma mark --- AliyunRecordNavigationViewDelegate
 - (void)navigationBackButtonClick {
     if (_delegate) {
-        [_delegate exitRecord];
-    }
+//        [_delegate exitRecord];
+        [self.navigationController popViewControllerAnimated:YES];
 
+    }
 }
 
 - (void)navigationRatioDidChangedWithValue:(CGFloat)r {
@@ -471,20 +475,29 @@
 - (void)bottomViewFinishVideo {
     
     [_recorder stopPreview];
+    
 //    // TODO:有没有更好的判断方法
 //    if ([[self.delegate class] isEqual:NSClassFromString(@"AliyunVideoBase")]) {
 //        [_recorder finishRecording];
 //    }
 //
-    _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
-    if (!self.isSkipEditVC) {
-        [_recorder finishRecording];
-    }else {
-        [_recorder destroyRecorder];
-        if (_delegate) {
-            [_delegate recoderFinish:self videopath:_recorder.outputPath];
-        }
-    }
+    
+//    //不清楚什么意思
+//     _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
+//     if (!self.isSkipEditVC) {
+//         [_recorder finishRecording];
+//     }else {
+//         [_recorder destroyRecorder];
+//         if (_delegate) {
+//             [_delegate recoderFinish:self videopath:_recorder.outputPath];
+//         }
+//     }
+
+      
+    SelectIteamViewController *SelectIteam = [[SelectIteamViewController alloc]init];
+    [self.navigationController setNavigationBarHidden:YES];
+    [self.navigationController pushViewController:SelectIteam animated:YES];
+    
 }
 
 - (void)bottomViewShowLibrary {
@@ -503,7 +516,6 @@
 }
 
 #pragma mark --- Get
-
 - (AliyunRecordNavigationView *)navigationView {
     if (!_navigationView) {
         _navigationView = [[AliyunRecordNavigationView alloc] initWithFrame:CGRectMake(0, SafeTop, ScreenWidth, 44)];
@@ -523,6 +535,7 @@
         _bottomView.delegate = (id<AliyunRecordBottomViewDelegate>)self;
         _bottomView.minDuration = _quVideo.minDuration;
         _bottomView.maxDuration = _quVideo.maxDuration;
+//        _bottomView.backgroundColor = [UIColor yellowColor];
     }
     return _bottomView;
 }

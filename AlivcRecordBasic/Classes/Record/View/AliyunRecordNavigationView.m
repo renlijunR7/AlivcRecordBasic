@@ -99,7 +99,7 @@
 }
 
 - (void)backButtonClick {
-    [_delegate navigationBackButtonClick];
+    [_delegate navigationBackButtonClick];   
 }
 
 - (void)ratioButtonClick {

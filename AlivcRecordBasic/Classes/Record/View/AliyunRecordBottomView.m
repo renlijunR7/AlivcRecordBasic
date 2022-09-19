@@ -10,6 +10,8 @@
 #import "QUProgressView.h"
 #import "AliyunIConfig.h"
 #import "AVC_ShortVideo_Config.h"
+#import "UIColor+Gradient.h"
+
 @interface AliyunRecordBottomView ()
 @property (nonatomic, strong) UIButton *recordButton;
 @property (nonatomic, strong) UIButton *deleteButton;
@@ -241,7 +243,7 @@
 }
 
 - (void)finishButtonClick {
-    [_delegate bottomViewFinishVideo];
+    [_delegate bottomViewFinishVideo]; 
 }
 
 - (void)photoLibraryButtonClick {

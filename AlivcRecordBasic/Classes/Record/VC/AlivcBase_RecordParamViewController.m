@@ -45,6 +45,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+   
     self.paramTitleLabel.text = NSLocalizedString(@"录制参数", nil);
     [self.rightButton setTitle: NSLocalizedString(@"硬编", nil) forState:UIControlStateNormal];
     self.automaticallyAdjustsScrollViewInsets = NO;
@@ -233,11 +234,8 @@
 - (void)toRecordView {
     [self.view endEditing:YES];
     
-    
     [self settingVideoSize];
-    
     [self settingVideoRatio];
-    
     
     if (_quVideo.minDuration <= 0) {
         [MBProgressHUD showMessage:NSLocalizedString(@"最小时长要大于0", nil) inView:self.view];
@@ -251,8 +249,10 @@
     
     
     if (_quVideo.maxDuration <= _quVideo.minDuration) {
-//        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"提示", nil) message:NSLocalizedString(@"最大时长不得小于最小时长", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"确定" , nil) otherButtonTitles: nil];
-//        [alert show];
+
+        //UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"提示", nil) message:NSLocalizedString(@"最大时长不得小于最小时长", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"确定" , nil) otherButtonTitles: nil];
+        //[alert show];
+        
         [MBProgressHUD showWarningMessage:NSLocalizedString(@"最大时长不得小于最小时长", nil) inView:self.view];
         return;
     }
@@ -263,9 +263,11 @@
     }
     UIViewController *recordViewController = [[AliyunVideoBase shared] createRecordViewControllerWithRecordParam:_quVideo];
     [AliyunVideoBase shared].delegate = (id)self;
-    [self.navigationController pushViewController:recordViewController animated:YES];
+    NSLog(@"参数 === %@",_quVideo);
     
+    [self.navigationController pushViewController:recordViewController animated:YES];
 }
+
 
 -(void)settingVideoSize{
     if (self.videoOutputWidth == 360) {
