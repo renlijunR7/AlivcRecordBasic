@@ -496,6 +496,7 @@
       
     SelectIteamViewController *SelectIteam = [[SelectIteamViewController alloc]init];
     [self.navigationController setNavigationBarHidden:YES];
+    SelectIteam.outputPath = self->_recorder.outputPath;
     [self.navigationController pushViewController:SelectIteam animated:YES];
     
 }

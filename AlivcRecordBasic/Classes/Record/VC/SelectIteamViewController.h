@@ -13,6 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SelectIteamViewController : AlivcBaseViewController
 
+@property(nonatomic, strong) NSString *outputPath;
+
 @end
 
 NS_ASSUME_NONNULL_END

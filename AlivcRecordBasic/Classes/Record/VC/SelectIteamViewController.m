@@ -14,7 +14,7 @@
 #import "HttpPresenter.h"
 #import "BLUser.h"
 
-
+#import <VODUpload/VODUploadClient.h>
 
 /*================================================================*/
 #define CLASS_AS_SINGLETON( __class ) \
@@ -39,13 +39,29 @@ return __singleton__; \
 
 {
     UIImageView *viedoImage;
+    NSArray * shortVideoCategoryList;
+    NSMutableArray * categoryListID;//标签id list
+    NSString *explainContent;//视频发布规则
+    NSString *describeStr;//视频描述
+    NSString *imgStr;//封面图片链接
+ 
 }
+
+
 @property (nonatomic, strong) UITextView *textPush;
 @property (nonatomic, strong) UILabel *textTitle;
 @property (nonatomic, strong) UIButton *pushBtn;
 @property (nonatomic, strong) UIScrollView *scrView;
 @property (strong, nonatomic) CBGroupAndStreamView * menueView;
 @property (nonatomic, strong) UILabel *uilabel;
+
+//上传视频
+@property(nonatomic, strong) VODUploadClient *uploader;
+@property (nonatomic, strong) VODUploadListener *listener;
+
+@property(nonatomic, strong) UploadFileInfo *fileInfo;
+@property(nonatomic, strong) NSString *uploadAuth;
+@property(nonatomic, strong) NSString *uploadAddress;
 
 
 @end
@@ -56,12 +72,111 @@ return __singleton__; \
     [super viewDidLoad];
     self.title = @"发布";
     self.view.backgroundColor = [UIColor blackColor];
+    shortVideoCategoryList = [NSArray alloc];
+    categoryListID = [[NSMutableArray alloc]init];
     
-    [self creatUI];
+    [self loadDate];
+    [self loadRulesDate];
+    NSLog(@"视频路径 === %@",self.outputPath);
+
+    NSDictionary *DicParams = @{
+        @"description":@"记录美好生活",
+        @"categoryIds":@[@"15",@"13",@"28"],
+        @"latitude":@"39.995156",
+        @"longitude":@"116.474069",
+        @"activityType":@"0",
+        @"remark":@"0.5625",
+        @"img":@"https://img.leshuapro.com/wangzhuang_images/a7276478-7bb2-477b-8fb4-f5c6f85e51dc.png",
+    };
+    
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
+    [HttpApi PostApiAddress:getUploadMessage  postParams:Params success:^(NSDictionary *resultDict) {
+        
+        self.uploadAddress = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAddress"]];
+        self.uploadAuth =  [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAuth"]];
+    
+        [self setUpLoadClient];
+        
+    } failure:^(NSDictionary *failureDict) {
+    }];
 }
 
-- (void)pushViedo{
-    NSLog(@"执行发布操作");
+
+- (void)setUpLoadClient{
+    
+    //创建VODUploadClient对象
+    self.uploader = [VODUploadClient new];
+    __weak typeof(self) weakSelf = self;
+    
+    //setup callback
+    OnUploadFinishedListener FinishCallbackFunc = ^(UploadFileInfo* fileInfo, VodUploadResult* result){
+        NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
+    };
+    OnUploadFailedListener FailedCallbackFunc = ^(UploadFileInfo* fileInfo, NSString *code, NSString* message){
+        NSLog(@"upload failed callback code = %@, error message = %@", code, message);
+    };
+    OnUploadProgressListener ProgressCallbackFunc = ^(UploadFileInfo* fileInfo, long uploadedSize, long totalSize) {
+        NSLog(@"upload progress callback uploadedSize : %li, totalSize : %li", uploadedSize, totalSize);
+    };
+    OnUploadTokenExpiredListener TokenExpiredCallbackFunc = ^{
+        NSLog(@"upload token expired callback.");
+        //token过期，设置新的上传凭证，继续上传
+        //[weakSelf.uploader resumeWithAuth:`new upload auth`];
+    };
+    OnUploadRertyListener RetryCallbackFunc = ^{
+        NSLog(@"upload retry begin callback.");
+    };
+    OnUploadRertyResumeListener RetryResumeCallbackFunc = ^{
+        NSLog(@"upload retry end callback.");
+    };
+    OnUploadStartedListener UploadStartedCallbackFunc = ^(UploadFileInfo* fileInfo) {
+        NSLog(@"pload upload started callback.");
+        //设置上传地址和上传凭证
+        [weakSelf.uploader setUploadAuthAndAddress:fileInfo uploadAuth:weakSelf.uploadAuth uploadAddress:weakSelf.uploadAddress];
+        
+    };
+    
+    self.listener = [[VODUploadListener alloc] init];
+    self.listener.finish = FinishCallbackFunc;
+    self.listener.failure = FailedCallbackFunc;
+    self.listener.progress = ProgressCallbackFunc;
+    self.listener.expire = TokenExpiredCallbackFunc;
+    self.listener.retry = RetryCallbackFunc;
+    self.listener.retryResume = RetryResumeCallbackFunc;
+    self.listener.started = UploadStartedCallbackFunc;
+    //init with upload address and upload auth
+    [self.uploader setListener:self.listener];
+}
+
+- (void)loadRulesDate{
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
+    }];
+    [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
+        self->explainContent = resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"];
+        NSLog(@"打印发布规则 === %@",resultDict);
+    
+    } failure:^(NSDictionary *failureDict) {
+    }];
+}
+
+- (void)loadDate{
+   
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
+    }];
+    [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
+        
+        if(resultDict!=nil||resultDict!=NULL){
+            NSMutableArray *categoryList = [[NSMutableArray alloc]init];
+            self->shortVideoCategoryList = resultDict[@"data"][@"shortVideoCategoryList"];
+            for (int i = 0;i < self->shortVideoCategoryList.count; i++) {
+                [categoryList addObject:self->shortVideoCategoryList[i][@"title"]];
+            }
+            [self creatUI:categoryList];
+        }else{
+        }
+    
+    } failure:^(NSDictionary *failureDict) {
+    }];
 }
 
 - (void)replaceCoverBtnAct{
@@ -82,9 +197,7 @@ return __singleton__; \
     [alterConroller addAction:albumAction];
     [alterConroller addAction:cancelAction];
     [self presentViewController:alterConroller animated:YES completion:nil];
-    
 }
-
 
 /// 打开照相机
 - (void)openCamera{
@@ -98,6 +211,7 @@ return __singleton__; \
     picker.delegate = self;
     [self presentViewController:picker animated:YES completion:nil];
 }
+
 /// 打开相册
 - (void)openAlbum{
     //UIImagePickerControllerSourceTypePhotoLibrary, 从所有相册选择
@@ -108,6 +222,7 @@ return __singleton__; \
     picker.delegate = self;
     [self presentViewController:picker animated:YES completion:nil];
 }
+
 #pragma mark - ******UIImagePickerControllerDelegate******
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -118,21 +233,32 @@ return __singleton__; \
 - (void)confirmSelt{
     [_menueView confirm];
     
-    XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:@"发布规则" message:@"昆明出口每次看梦想现买现卖行行项目，名小吃麦科马克出没 v 蜂蜜蜂蜜方面发没开门昆明出口每次看梦想现买现卖行行项目，名小吃麦科马克出没 v 蜂蜜蜂蜜方面发没开门昆明出口每次看梦想现买现卖行行项目，名小吃麦科马克出没 v 蜂蜜蜂蜜方面发没开门昆明" sureBtn:@"我知道了" cancleBtn:@""];
+    XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:@"发布规则" message:explainContent sureBtn:@"我知道了" cancleBtn:@""];
     xlAlertView.resultIndex = ^(NSInteger index){
     };
     [xlAlertView showXLAlertView];
 }
 
-
 #pragma mark---delegate
 - (void)cb_confirmReturnValue:(NSArray *)valueArr groupId:(NSArray *)groupIdArr{
-    NSLog(@"valueArr = %@ \ngroupIdArr = %@",valueArr,groupIdArr);
+    
+    NSArray *temArr= [NSArray alloc];
+    temArr = valueArr[0];
+    [categoryListID removeAllObjects];
+    
+    if (valueArr.count > 0) {
+        for (int i = 0;i < temArr.count; i++) {
+            int index = (int)[temArr[i] integerValue];
+            [categoryListID addObject:shortVideoCategoryList[index][@"id"]];
+        }
+        NSLog(@"categoryListID======== %@",categoryListID);
+    }else{
+    }
 }
 
-- (void)cb_selectCurrentValueWith:(NSString *)value index:(NSInteger)index groupId:(NSInteger)groupId{
-    NSLog(@"value = %@----index = %ld------groupId = %ld",value,index,groupId);
+- (void)cb_selectCurrentValueWith:(NSString *)value index:(NSInteger)index groupId:(NSInteger)groupId {
 }
+
 
 -(void)textViewDidChange:(UITextView *)textView
 {
@@ -143,7 +269,7 @@ return __singleton__; \
     }
 }
 
--(void)creatUI{
+-(void)creatUI:(NSArray *)arrList{
     _scrView = [[UIScrollView alloc]initWithFrame:CGRectMake(0, 0, ScreenWidth, ScreenHeight - 180)];
     _scrView.scrollEnabled = YES;
     _scrView.userInteractionEnabled = YES;
@@ -190,7 +316,7 @@ return __singleton__; \
                                                      endColor:rgba(252, 24, 73, 1)];
     [self.view addSubview:_pushBtn];
     NSArray * titleArr = @[@"视频话题（可多选）"];
-    NSArray *contentArr = @[@[@"9枝",@"枝",@"11枝",@"21枝",@"33枝",@"99枝",@"99999999枝以上",@"恋人",@"燕草罗帏。",@"亲人恩师恩师",@"恩师恩师",@"病人",@"病人",@"其他",@"恋人",@"常恨言",@"亲人恩师恩师",@"恩师恩师",@"病人",@"绝代有佳人",@"0枝",@"11枝",@"21枝",@"33枝",@"99枝",@"99999999枝以上",@"恋人",@"燕草罗帏。",@"亲人恩师恩师",@"恩师恩师",@"病人",@"燕草罗帏。",@"亲人恩师恩师",@"恩师恩师",@"病人"]];
+    NSArray *contentArr = @[arrList];
     
     CBGroupAndStreamView * silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
     silde.layer.cornerRadius = 6;
@@ -198,12 +324,9 @@ return __singleton__; \
     silde.delegate = self;
     silde.isDefaultSel = NO;
     silde.isSingle = NO;
-    silde.radius = 18;
+    silde.radius = 12;
     silde.font = [UIFont systemFontOfSize:12];
     silde.titleTextFont = [UIFont systemFontOfSize:18];
-    //silde.singleFlagArr = @[@0];
-    //silde.defaultSelectIndex = 1;
-    //silde.defaultSelectIndexArr = @[@0];
     silde.selColor = [UIColor orangeColor];
     [_scrView addSubview:silde];
     [silde setContentView:contentArr titleArr:titleArr];
@@ -225,22 +348,33 @@ return __singleton__; \
     replaceCoverBtn.titleLabel.font = [UIFont systemFontOfSize:14];
     [replaceCoverBtn addTarget:self action:@selector(replaceCoverBtnAct) forControlEvents:UIControlEventTouchUpInside];
     [_scrView addSubview:replaceCoverBtn];
-    
 }
 
 -(void)TapImage:(UITapGestureRecognizer*)sender{
-
+    
     NSDictionary *DicParams = @{
         @"userNum":@"12874664",
     };
     
-
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
     [HttpApi PostApiAddress:QueryUserFollowUrl  postParams:Params success:^(NSDictionary *resultDict) {
         
     } failure:^(NSDictionary *failureDict) {
-        
     }];
+}
+
+
+- (void)pushViedo{
+    
+    NSLog(@"执行发布操作");
+   
+    [self.uploader addFile:self.outputPath vodInfo:nil];
+    [self.uploader start];
+    
+    NSLog(@"self.outputPath == %@",self.outputPath);
+    NSLog(@"uploadAuth ===%@ ",self.uploadAuth);
+    NSLog(@"uploadAddress ===%@ ",self.uploadAddress);
+
 }
 
 @end
