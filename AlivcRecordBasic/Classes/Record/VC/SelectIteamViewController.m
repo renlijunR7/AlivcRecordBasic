@@ -77,18 +77,21 @@ return __singleton__; \
     self.view.backgroundColor = [UIColor blackColor];
     shortVideoCategoryList = [NSArray alloc];
     categoryListID = [[NSMutableArray alloc]init];
-    
-    [self loadDate];
     NSLog(@"视频路径 === %@",self.outputPath);
+    
+
     NSURL *url = [NSURL fileURLWithPath:self.outputPath];
     self.imgaeS = [self getVideoPreViewImage:url];
+    NSLog(@"imgaeS  === %@",self.imgaeS);
+
+    [self loadDate];
     
 
     NSDictionary *DicParams = @{
         @"description":@"记录美好生活",
-        @"categoryIds":@[@"15",@"13",@"28"],
+        @"categoryIds":@[@"1",@"3",@"28"],
         @"latitude":@"39.995156",
-        @"longitude":@"116.474069",
+        @"longitude":@"116.474060",
         @"activityType":@"0",
         @"remark":@"0.5625",
         @"img":@"https://img.leshuapro.com/wangzhuang_images/a7276478-7bb2-477b-8fb4-f5c6f85e51dc.png",
@@ -317,7 +320,7 @@ return __singleton__; \
     
     viedoImage = [[UIImageView alloc]initWithFrame:CGRectMake(20 ,[silde viewHeight]+200, 100, 120)];
     viedoImage.image = self.imgaeS;
-    viedoImage.backgroundColor = [UIColor yellowColor];
+    viedoImage.backgroundColor = [UIColor lightGrayColor];
     viedoImage.layer.cornerRadius = 6;
     viedoImage.layer.masksToBounds = YES;
     viedoImage.userInteractionEnabled = YES;
