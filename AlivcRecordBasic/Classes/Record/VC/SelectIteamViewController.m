@@ -7,6 +7,9 @@
 //
 
 #import "SelectIteamViewController.h"
+#import <AVFoundation/AVAsset.h>
+#import <AVFoundation/AVAssetImageGenerator.h>
+#import <AVFoundation/AVTime.h>
 #import "CBGroupAndStreamView.h"
 #import "XLAlertView.h"
 #import "UIColor+Gradient.h"
@@ -41,7 +44,6 @@ return __singleton__; \
     UIImageView *viedoImage;
     NSArray * shortVideoCategoryList;
     NSMutableArray * categoryListID;//标签id list
-    NSString *explainContent;//视频发布规则
     NSString *describeStr;//视频描述
     NSString *imgStr;//封面图片链接
  
@@ -62,6 +64,7 @@ return __singleton__; \
 @property(nonatomic, strong) UploadFileInfo *fileInfo;
 @property(nonatomic, strong) NSString *uploadAuth;
 @property(nonatomic, strong) NSString *uploadAddress;
+@property(nonatomic, strong) UIImage *imgaeS;//视频封面
 
 
 @end
@@ -76,8 +79,10 @@ return __singleton__; \
     categoryListID = [[NSMutableArray alloc]init];
     
     [self loadDate];
-    [self loadRulesDate];
     NSLog(@"视频路径 === %@",self.outputPath);
+    NSURL *url = [NSURL fileURLWithPath:self.outputPath];
+    self.imgaeS = [self getVideoPreViewImage:url];
+    
 
     NSDictionary *DicParams = @{
         @"description":@"记录美好生活",
@@ -107,8 +112,6 @@ return __singleton__; \
     //创建VODUploadClient对象
     self.uploader = [VODUploadClient new];
     __weak typeof(self) weakSelf = self;
-    
-    //setup callback
     OnUploadFinishedListener FinishCallbackFunc = ^(UploadFileInfo* fileInfo, VodUploadResult* result){
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
     };
@@ -133,7 +136,6 @@ return __singleton__; \
         NSLog(@"pload upload started callback.");
         //设置上传地址和上传凭证
         [weakSelf.uploader setUploadAuthAndAddress:fileInfo uploadAuth:weakSelf.uploadAuth uploadAddress:weakSelf.uploadAddress];
-        
     };
     
     self.listener = [[VODUploadListener alloc] init];
@@ -146,17 +148,6 @@ return __singleton__; \
     self.listener.started = UploadStartedCallbackFunc;
     //init with upload address and upload auth
     [self.uploader setListener:self.listener];
-}
-
-- (void)loadRulesDate{
-    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
-    }];
-    [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
-        self->explainContent = resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"];
-        NSLog(@"打印发布规则 === %@",resultDict);
-    
-    } failure:^(NSDictionary *failureDict) {
-    }];
 }
 
 - (void)loadDate{
@@ -174,7 +165,6 @@ return __singleton__; \
             [self creatUI:categoryList];
         }else{
         }
-    
     } failure:^(NSDictionary *failureDict) {
     }];
 }
@@ -201,10 +191,6 @@ return __singleton__; \
 
 /// 打开照相机
 - (void)openCamera{
-    //UIImagePickerControllerSourceTypePhotoLibrary, 从所有相册选择
-    //UIImagePickerControllerSourceTypeCamera, //拍一张照片
-    //UIImagePickerControllerSourceTypeSavedPhotosAlbum//从moments选择一张照片
-    //判断照相机能否使用
     if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) return;
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     picker.sourceType = UIImagePickerControllerSourceTypeCamera;
@@ -214,9 +200,6 @@ return __singleton__; \
 
 /// 打开相册
 - (void)openAlbum{
-    //UIImagePickerControllerSourceTypePhotoLibrary, 从所有相册选择
-    //UIImagePickerControllerSourceTypeCamera, //拍一张照片
-    //UIImagePickerControllerSourceTypeSavedPhotosAlbum//从moments选择一张照片
     UIImagePickerController *picker = [[UIImagePickerController alloc] init];
     picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
     picker.delegate = self;
@@ -227,16 +210,20 @@ return __singleton__; \
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
     [picker dismissViewControllerAnimated:YES completion:nil];
     viedoImage.image = info[UIImagePickerControllerOriginalImage];
-    NSLog(@"%@",info);
+    NSLog(@"照片 ====信息%@",info);
 }
 
 - (void)confirmSelt{
-    [_menueView confirm];
     
-    XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:@"发布规则" message:explainContent sureBtn:@"我知道了" cancleBtn:@""];
-    xlAlertView.resultIndex = ^(NSInteger index){
-    };
-    [xlAlertView showXLAlertView];
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
+    }];
+    [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
+        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:@"发布规则" message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"] sureBtn:@"我知道了" cancleBtn:@""];
+        xlAlertView.resultIndex = ^(NSInteger index){
+        };
+        [xlAlertView showXLAlertView];
+    } failure:^(NSDictionary *failureDict) {
+    }];
 }
 
 #pragma mark---delegate
@@ -245,13 +232,11 @@ return __singleton__; \
     NSArray *temArr= [NSArray alloc];
     temArr = valueArr[0];
     [categoryListID removeAllObjects];
-    
     if (valueArr.count > 0) {
         for (int i = 0;i < temArr.count; i++) {
             int index = (int)[temArr[i] integerValue];
-            [categoryListID addObject:shortVideoCategoryList[index][@"id"]];
+            [categoryListID addObject:[NSString stringWithFormat:@"%@",shortVideoCategoryList[index][@"id"]]];
         }
-        NSLog(@"categoryListID======== %@",categoryListID);
     }else{
     }
 }
@@ -279,7 +264,7 @@ return __singleton__; \
     
     self.navigationController.navigationBarHidden = NO;
     self.navigationController.view.backgroundColor =[UIColor blackColor];
-    //29292D
+    
     UIButton * rightBut = [UIButton buttonWithType:UIButtonTypeCustom];
     [rightBut setTitle:@"规则" forState:UIControlStateNormal];
     [rightBut setFrame:CGRectMake(0, 0, 40, 40)];
@@ -300,7 +285,7 @@ return __singleton__; \
     _uilabel.text = @"可添加300个文字,我想说...";
     _uilabel.font = [UIFont systemFontOfSize:15];
     _uilabel.textColor = [UIColor whiteColor];
-    _uilabel.enabled = NO;//lable必须设置为不可用
+    _uilabel.enabled = NO;
     [_textPush addSubview:_uilabel];
     
     _pushBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,ScreenHeight - 165, ScreenWidth - 40, 45)];
@@ -319,12 +304,10 @@ return __singleton__; \
     NSArray *contentArr = @[arrList];
     
     CBGroupAndStreamView * silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
-    silde.layer.cornerRadius = 6;
-    silde.layer.masksToBounds = YES;
     silde.delegate = self;
     silde.isDefaultSel = NO;
     silde.isSingle = NO;
-    silde.radius = 12;
+    silde.radius = 15;
     silde.font = [UIFont systemFontOfSize:12];
     silde.titleTextFont = [UIFont systemFontOfSize:18];
     silde.selColor = [UIColor orangeColor];
@@ -333,6 +316,7 @@ return __singleton__; \
     _menueView = silde;
     
     viedoImage = [[UIImageView alloc]initWithFrame:CGRectMake(20 ,[silde viewHeight]+200, 100, 120)];
+    viedoImage.image = self.imgaeS;
     viedoImage.backgroundColor = [UIColor yellowColor];
     viedoImage.layer.cornerRadius = 6;
     viedoImage.layer.masksToBounds = YES;
@@ -341,13 +325,28 @@ return __singleton__; \
     [viedoImage addGestureRecognizer:tap];
     [_scrView addSubview:viedoImage];
     
-    
     UIButton *replaceCoverBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,CGRectGetMaxY(viedoImage.frame)+8, 100, 20)];
     [replaceCoverBtn setTitle:@"更换封面" forState:UIControlStateNormal];
     [replaceCoverBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     replaceCoverBtn.titleLabel.font = [UIFont systemFontOfSize:14];
     [replaceCoverBtn addTarget:self action:@selector(replaceCoverBtnAct) forControlEvents:UIControlEventTouchUpInside];
     [_scrView addSubview:replaceCoverBtn];
+}
+
+// 获取视频第一帧
+- (UIImage*) getVideoPreViewImage:(NSURL *)path
+{
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
+    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+  
+    assetGen.appliesPreferredTrackTransform = YES;
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+    NSError *error = nil;
+    CMTime actualTime;
+    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
+    CGImageRelease(image);
+    return videoImage;
 }
 
 -(void)TapImage:(UITapGestureRecognizer*)sender{
@@ -365,16 +364,13 @@ return __singleton__; \
 
 
 - (void)pushViedo{
-    
     NSLog(@"执行发布操作");
-   
     [self.uploader addFile:self.outputPath vodInfo:nil];
     [self.uploader start];
     
     NSLog(@"self.outputPath == %@",self.outputPath);
     NSLog(@"uploadAuth ===%@ ",self.uploadAuth);
     NSLog(@"uploadAddress ===%@ ",self.uploadAddress);
-
 }
 
 @end

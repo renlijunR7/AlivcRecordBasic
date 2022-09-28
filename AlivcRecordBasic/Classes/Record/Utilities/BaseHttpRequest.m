@@ -38,25 +38,41 @@
     
     //if (loading){ShowLoading;};
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-    AFHTTPRequestSerializer *requestSerializer =  [AFJSONRequestSerializer serializer];
-    manager.requestSerializer = requestSerializer;
-    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json",@"text/html",@"image/jpeg",@"image/png",@"application/octet-stream",@"text/json",nil];
-    manager.requestSerializer.timeoutInterval = 10.0f;
-    [manager.requestSerializer setValue:@"close" forHTTPHeaderField:@"Connection"];
+    manager.responseSerializer = [AFJSONResponseSerializer serializer];
+    manager.requestSerializer=[AFJSONRequestSerializer serializer];
+    [manager.responseSerializer setAcceptableContentTypes: [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",@"text/css",@"text/plain", nil]];
+    manager.requestSerializer.timeoutInterval = 100.0f;
     
     //添加Header
-    [requestSerializer setValue:@"appVersion" forHTTPHeaderField:CurUser.appVersion];
-    [requestSerializer setValue:@"appType" forHTTPHeaderField:CurUser.appType];
-    [requestSerializer setValue:@"appName" forHTTPHeaderField:CurUser.appName];
-    [requestSerializer setValue:@"Accept-Language" forHTTPHeaderField:CurUser.AcceptLanguage];
-    [requestSerializer setValue:@"androidChannel" forHTTPHeaderField:CurUser.androidChannel];
-    [requestSerializer setValue:@"appTheme" forHTTPHeaderField:CurUser.appTheme];
-    [requestSerializer setValue:@"appFixVersion" forHTTPHeaderField:CurUser.appFixVersion];
-    [requestSerializer setValue:@"deviceToken" forHTTPHeaderField:CurUser.deviceToken];
-    [requestSerializer setValue:@"deviceName" forHTTPHeaderField:CurUser.deviceName];
-    [requestSerializer setValue:@"accessToken" forHTTPHeaderField:CurUser.accessToken];
+    //    [manager.requestSerializer setValue:@"close" forHTTPHeaderField:@"Connection"];
+    //    [requestSerializer setValue:@"appVersion" forHTTPHeaderField:CurUser.appVersion];
+    //    [requestSerializer setValue:@"appType" forHTTPHeaderField:CurUser.appType];
+    //    [requestSerializer setValue:@"appName" forHTTPHeaderField:CurUser.appName];
+    //    [requestSerializer setValue:@"Accept-Language" forHTTPHeaderField:CurUser.AcceptLanguage];
+    //    [requestSerializer setValue:@"androidChannel" forHTTPHeaderField:CurUser.androidChannel];
+    //    [requestSerializer setValue:@"appTheme" forHTTPHeaderField:CurUser.appTheme];
+    //    [requestSerializer setValue:@"appFixVersion" forHTTPHeaderField:CurUser.appFixVersion];
+    //    [requestSerializer setValue:@"deviceToken" forHTTPHeaderField:CurUser.deviceToken];
+    //    [requestSerializer setValue:@"deviceName" forHTTPHeaderField:CurUser.deviceName];
+    //    [requestSerializer setValue:@"accessToken" forHTTPHeaderField:CurUser.accessToken];
     
-    //http body转换类
+    
+    [manager.requestSerializer setValue:@"close" forHTTPHeaderField:@"Connection"];
+    [manager.requestSerializer setValue:@"1.2.4" forHTTPHeaderField:@"appVersion"];
+    [manager.requestSerializer setValue:@"android" forHTTPHeaderField:@"appType"];
+    [manager.requestSerializer setValue:@"DeTok" forHTTPHeaderField:@"appName"];
+    [manager.requestSerializer setValue:@"zh-CN" forHTTPHeaderField:@"Accept-Language"];
+    [manager.requestSerializer setValue:@"" forHTTPHeaderField:@"androidChannel"];
+    [manager.requestSerializer setValue:@"background_white" forHTTPHeaderField:@"appTheme"];
+    [manager.requestSerializer setValue:@"0" forHTTPHeaderField:@"appFixVersion"];
+    [manager.requestSerializer setValue:@"861533030498297" forHTTPHeaderField:@"deviceToken"];
+    [manager.requestSerializer setValue:@"EVA-AL10" forHTTPHeaderField:@"deviceName"];
+    [manager.requestSerializer setValue:@"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJJOVBqWkRTbVVnR0tKV1U3IjoiVjR5eGlmMXVKZE1xYlhtMUZuckJpTURWQUJGdHJFTmM2aDQ1RDFIZXc2bkR3TzRybFQ4WFJ5M2hqUkMrIiwiaXNzIjoiektPUlI1b0FDd3RAcml0SzJVSThZNEokKlQjY3pIem0iLCJpYXQiOjE2NjWjN5lhlivCyxJ9XdHQwMTQ2NDgsImF1ZCI6Im02bHU3RnVaeVV2MUJYZWUiLCJleHAiOjE2NjY2MDY2NDgsIm5iZiI6MTY219zS0ndsnV6NDAxNDY0OH0.BrWq7009wZL21VP84pAlvMLPCEC03vad-hQFEPng1-4Bkt5o" forHTTPHeaderField:@"accessToken"];
+    
+    // 跳过验签
+    [manager.requestSerializer setValue:@"123456@ls" forHTTPHeaderField:@"testPwd"];
+    [manager.requestSerializer setValue:@"100224226906" forHTTPHeaderField:@"userId"];
+    
     //1.获取uuid
     NSString *appNonce = [self uuidStr];
     appNonce = [appNonce lowercaseString];
@@ -73,15 +89,17 @@
     
     //4.把其他的参数添加到tempDic
     [tempDic addEntriesFromDictionary:params];
-    //appNonce转成小写
+    
+    //5.appNonce转成小写
     [tempDic setValue:appNonce forKey:@"appNonce"];
     NSLog(@"tempDic === :%@",tempDic);
     
-    //5.加入_signKey 并且进行mad5加密
+    //6.加入_signKey 并且进行mad5加密
     NSString * sign = [self createMd5Sign:tempDic];
     [tempDic setValue:sign forKey:@"appSign"];
     
     NSString *apiPath = [NSString stringWithFormat:@"%@%@",ServerIP,apiAddress];
+    NSLog(@"请求头信息:%@\n",manager.requestSerializer.HTTPRequestHeaders);
     NSLog(@"请求链接：＝%@,请求参数＝%@",[NSString stringWithFormat:@"%@%@",ServerIP,apiAddress],tempDic);
     
     //发送请求
@@ -201,7 +219,7 @@
             NSString * string = [self getArrayOrDiction:[dict objectForKey:categoryId]];
             [contentString appendFormat:@"%@=%@&", categoryId, string];
             NSLog(@"1contentString === %@",contentString);
-
+            
         }else if ([[dict objectForKey:categoryId] isKindOfClass:[NSArray class]] || [[dict objectForKey:categoryId] isKindOfClass:[NSMutableArray class]]){
             NSMutableString *currentString  =[NSMutableString string];
             NSArray * arr = [dict objectForKey:categoryId];
@@ -238,7 +256,6 @@
     NSString * _signKey = @"xv^#3cc#TXIV4sbtZ%IgX7+HHioLMEH0Un!u_Eh7Gc&UIKoBZF%C%vG99gS0o3pl";
     //添加key字段
     [contentString appendFormat:@"signSercetKey=%@%@",_signKey,dict[@"appNonce"]];
-    
     
     NSLog(@"4contentString === %@",contentString);
     //得到MD5 sign签名

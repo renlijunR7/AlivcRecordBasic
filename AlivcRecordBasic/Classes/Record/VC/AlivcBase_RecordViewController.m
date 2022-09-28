@@ -19,10 +19,6 @@
 #import "AliyunIConfig.h"
 #import "SelectIteamViewController.h"
 
-
-
-
-
 @interface AlivcBase_RecordViewController ()<AliyunIRecorderDelegate,UIGestureRecognizerDelegate,AliyunRecoderFilterPluginDelegate>
 
 
@@ -334,9 +330,8 @@
         [self->_navigationView updateNavigationStatusWithDuration:duration];
         [self showDuration:duration];
         
-        
-        NSLog(@"视频的路路径 ==== :%@",self->_recorder.outputPath);
-        
+        NSLog(@"视频的路路径outputPath ==== :%@",self->_recorder.outputPath);
+        NSLog(@"视频的路路径taskPath ==== :%@",self->_recorder.taskPath);
         
     });
 }
@@ -476,11 +471,11 @@
     
     [_recorder stopPreview];
     
-//    // TODO:有没有更好的判断方法
+    // TODO:有没有更好的判断方法
 //    if ([[self.delegate class] isEqual:NSClassFromString(@"AliyunVideoBase")]) {
 //        [_recorder finishRecording];
 //    }
-//
+
     
 //    //不清楚什么意思
 //     _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
@@ -496,7 +491,7 @@
       
     SelectIteamViewController *SelectIteam = [[SelectIteamViewController alloc]init];
     [self.navigationController setNavigationBarHidden:YES];
-    SelectIteam.outputPath = self->_recorder.outputPath;
+    SelectIteam.outputPath = self->_recorder.outputPath;//outputPath taskPath
     [self.navigationController pushViewController:SelectIteam animated:YES];
     
 }

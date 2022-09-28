@@ -26,5 +26,12 @@
 
 #define QueryUserFollowUrl         @"api/userFollow/queryUserFollow"
 
+#define queryShortVideoCategoryList         @"api/shortVideo/queryShortVideoCategoryList"
+
+#define queryShortVideoUploadAwardConfig         @"api/shortVideoUploadAwardConfig/queryShortVideoUploadAwardConfig"
+
+#define getUploadMessage         @"api/shortVideo/getUploadMessage"
+
+
 
 #endif /* ServiceGeneral_h */

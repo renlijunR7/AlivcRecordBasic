@@ -49,7 +49,7 @@
 - (void)initDefaultConfign{
     _isDefaultSel = YES;
     _isSingle = YES;
-    _butHeight = 35;
+    _butHeight = 30;
     _font = [UIFont systemFontOfSize:15];
     _contentNorColor = CBColor(100, 100, 100);
     _contentSelColor = rgba(252, 36, 74, 1);
@@ -58,7 +58,7 @@
     _titleTextColor = [UIColor whiteColor];
     _titleTextFont = [UIFont systemFontOfSize:14];
     _maragin_x = _maragin_y = 10;
-    _titleLabHeight = 30;
+    _titleLabHeight = 25;
     _radius = 15;
     _defaultSelectIndex = 0;
 
@@ -153,12 +153,11 @@
         
         but.layer.borderColor = rgba(78, 76, 86, 1).CGColor;//设置边框颜色
         but.layer.borderWidth = 1;//设置边框宽度
-        
         but.titleLabel.font = _font;
 
-        // 九宫格算法，每行放三个 margainX+(i%3)*(butWidth + 10)  margainY+(i/3)*(butHeight+10)
+        //九宫格算法，每行放三个 margainX+(i%3)*(butWidth + 10)  margainY+(i/3)*(butHeight+10)
         //处理标签流
-        CGFloat butWidth = contentSize.width + 20;
+        CGFloat butWidth = contentSize.width + 30;
         butorignX = alineButWidth + _maragin_x;
         if (butWidth > UIScreen.mainScreen.bounds.size.width - 2 * _maragin_x) {
             // 设置多行
@@ -239,7 +238,6 @@
     if (_defaultSelectIndexArr.count > 0 && _isDefaultSel) {
         [self.saveSelButValueArr replaceObjectAtIndex:groupId withObject:tempSelArr];
     }
-
     return rect;
 }
 
@@ -304,17 +302,18 @@
         tempSaveArr = [[NSMutableArray alloc] init];
     }
 
-    valueStr = [NSString stringWithFormat:@"%ld/%@",sender.tag % 100 - 1,self.dataSourceArr[sender.tag / 100][sender.tag % 100 - 1]];
-
+    //valueStr = [NSString stringWithFormat:@"%ld/%@",sender.tag % 100 - 1,self.dataSourceArr[sender.tag / 100][sender.tag % 100 - 1]];
+    valueStr = [NSString stringWithFormat:@"%ld",sender.tag % 100 - 1];
+    
     if (sender.selected) {
-//        sender.backgroundColor = _selColor;
+        //sender.backgroundColor = _selColor;
         sender.layer.borderColor = _selColor.CGColor;
         if (![tempSaveArr containsObject:valueStr]) {
             [tempSaveArr addObject:valueStr];
         }
     }else{
         sender.layer.borderColor = _norColor.CGColor;
-//        sender.backgroundColor = _norColor;
+        //sender.backgroundColor = _norColor;
         [tempSaveArr removeObject:valueStr];
     }
 
@@ -330,6 +329,7 @@
     if (_cb_selectCurrentValueBlock) {
         _cb_selectCurrentValueBlock(self.dataSourceArr[sender.tag / 100][sender.tag % 100 - 1],sender.tag % 100 - 1,sender.tag / 100);
     }
+    [self  confirm];
 }
 
 #pragma mark---确定

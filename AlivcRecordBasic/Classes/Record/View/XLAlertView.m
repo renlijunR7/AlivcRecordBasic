@@ -33,7 +33,7 @@
         
         self.frame = [UIScreen mainScreen].bounds;
         self.backgroundColor = [UIColor blackColor];
-        self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.9];
+        self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.7];
         self.alertView = [[UIView alloc] init];
         self.alertView.backgroundColor = [UIColor whiteColor];
         self.alertView.alpha = 1;
@@ -50,11 +50,13 @@
             CGFloat titleW = self.titleLbl.bounds.size.width;
             CGFloat titleH = self.titleLbl.bounds.size.height;
             self.titleLbl.frame = CGRectMake((AlertW-titleW)/2, 2*XLSpace, titleW, titleH);
-            
+            self.titleLbl.textColor = [UIColor blackColor];
         }
+        
         if (message) {
             
             self.msgLbl = [self GetAdaptiveLable:CGRectMake(XLSpace, CGRectGetMaxY(self.titleLbl.frame)+XLSpace, AlertW-2*XLSpace, 20) AndText:message andIsTitle:NO];
+            self.msgLbl.textColor = [UIColor blackColor];
             self.msgLbl.textAlignment = NSTextAlignmentCenter;
            
             [self.alertView addSubview:self.msgLbl];
