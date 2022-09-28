@@ -304,7 +304,7 @@
                                 completionBlock:^(NSURL *assetURL, NSError *error) {
                                     
                                     dispatch_async(dispatch_get_main_queue(), ^{
-                                        [recordVC.navigationController popViewControllerAnimated:YES];
+                                        //[recordVC.navigationController popViewControllerAnimated:YES];
                                     });
                                 }];
 }
