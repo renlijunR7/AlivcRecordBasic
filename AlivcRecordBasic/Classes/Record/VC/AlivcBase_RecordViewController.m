@@ -477,16 +477,16 @@
 //    }
 
     
-//    //不清楚什么意思
-//     _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
-//     if (!self.isSkipEditVC) {
-//         [_recorder finishRecording];
-//     }else {
-//         [_recorder destroyRecorder];
-//         if (_delegate) {
-//             [_delegate recoderFinish:self videopath:_recorder.outputPath];
-//         }
-//     }
+    //不清楚什么意思
+     _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
+     if (!self.isSkipEditVC) {
+         //[_recorder finishRecording];
+     }else {
+         [_recorder destroyRecorder];
+         if (_delegate) {
+             [_delegate recoderFinish:self videopath:_recorder.outputPath];
+         }
+     }
 
       
     SelectIteamViewController *SelectIteam = [[SelectIteamViewController alloc]init];
