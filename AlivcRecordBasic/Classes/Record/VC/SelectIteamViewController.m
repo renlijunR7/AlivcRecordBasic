@@ -16,6 +16,8 @@
 #import "CommonMacro.h"
 #import "HttpPresenter.h"
 #import "BLUser.h"
+#import "MBProgressHUD.h"
+
 
 #import <VODUpload/VODUploadClient.h>
 
@@ -46,7 +48,7 @@ return __singleton__; \
     NSMutableArray * categoryListID;//标签id list
     NSString *describeStr;//视频描述
     NSString *imgStr;//封面图片链接
- 
+    MBProgressHUD *hud;//加载loading
 }
 
 
@@ -73,20 +75,20 @@ return __singleton__; \
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    
     self.title = @"发布";
     self.view.backgroundColor = [UIColor blackColor];
     shortVideoCategoryList = [NSArray alloc];
     categoryListID = [[NSMutableArray alloc]init];
     NSLog(@"视频路径 === %@",self.outputPath);
     
-
     NSURL *url = [NSURL fileURLWithPath:self.outputPath];
     self.imgaeS = [self getVideoPreViewImage:url];
     NSLog(@"imgaeS  === %@",self.imgaeS);
 
     [self loadDate];
     
-
     NSDictionary *DicParams = @{
         @"description":@"记录美好生活",
         @"categoryIds":@[@"1",@"3",@"28"],
@@ -107,6 +109,11 @@ return __singleton__; \
         
     } failure:^(NSDictionary *failureDict) {
     }];
+    
+    //隐藏键盘
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(keyboardHide)];
+    tapGestureRecognizer.cancelsTouchesInView = NO;
+    [self.view addGestureRecognizer:tapGestureRecognizer];
 }
 
 
@@ -154,11 +161,11 @@ return __singleton__; \
 }
 
 - (void)loadDate{
-   
+    [self showHud];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
-        
+        [self hideHud];
         if(resultDict!=nil||resultDict!=NULL){
             NSMutableArray *categoryList = [[NSMutableArray alloc]init];
             self->shortVideoCategoryList = resultDict[@"data"][@"shortVideoCategoryList"];
@@ -166,6 +173,7 @@ return __singleton__; \
                 [categoryList addObject:self->shortVideoCategoryList[i][@"title"]];
             }
             [self creatUI:categoryList];
+            
         }else{
         }
     } failure:^(NSDictionary *failureDict) {
@@ -257,6 +265,12 @@ return __singleton__; \
     }
 }
 
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [_textPush resignFirstResponder];
+    return YES;
+}
+
 -(void)creatUI:(NSArray *)arrList{
     _scrView = [[UIScrollView alloc]initWithFrame:CGRectMake(0, 0, ScreenWidth, ScreenHeight - 180)];
     _scrView.scrollEnabled = YES;
@@ -313,7 +327,7 @@ return __singleton__; \
     silde.radius = 15;
     silde.font = [UIFont systemFontOfSize:12];
     silde.titleTextFont = [UIFont systemFontOfSize:18];
-    silde.selColor = [UIColor orangeColor];
+    silde.selColor = rgba(254, 69, 89, 1);
     [_scrView addSubview:silde];
     [silde setContentView:contentArr titleArr:titleArr];
     _menueView = silde;
@@ -374,6 +388,27 @@ return __singleton__; \
     NSLog(@"self.outputPath == %@",self.outputPath);
     NSLog(@"uploadAuth ===%@ ",self.uploadAuth);
     NSLog(@"uploadAddress ===%@ ",self.uploadAddress);
+}
+
+
+//========辅助工具(后续封装)==================================================
+- (void)showHud
+{
+    hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    hud.bezelView.color = [UIColor whiteColor];
+    hud.bezelView.alpha = 0.8;
+    hud.label.text = @"加载中...";
+}
+- (void)hideHud
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self->hud hideAnimated:YES];
+    });
+}
+
+- (void)keyboardHide
+{
+    [self.view endEditing:YES];
 }
 
 @end
