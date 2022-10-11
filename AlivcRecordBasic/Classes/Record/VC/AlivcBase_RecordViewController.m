@@ -480,7 +480,7 @@
     //不清楚什么意思
      _quVideo.videoRotate = [_clipManager firstClipVideoRotation];
      if (!self.isSkipEditVC) {
-         //[_recorder finishRecording];
+          [_recorder finishRecording];
      }else {
          [_recorder destroyRecorder];
          if (_delegate) {
