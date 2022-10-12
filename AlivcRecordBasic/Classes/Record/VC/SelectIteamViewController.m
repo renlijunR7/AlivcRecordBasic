@@ -17,6 +17,9 @@
 #import "HttpPresenter.h"
 #import "BLUser.h"
 #import "MBProgressHUD.h"
+#import "MBProgressHUD+AlivcHelper.h"
+#import "AFHTTPSessionManager.h"
+
 
 
 #import <VODUpload/VODUploadClient.h>
@@ -38,6 +41,16 @@ return __singleton__; \
 /*================================================================*/
 #define HttpApi         [HttpPresenter sharedInstance]
 #define CurUser         [BLUser sharedInstance]
+#define ShowHud(Msg)    [[UWAlertManager sharedInstance] showHud:Msg]
+
+
+/*================================================================*/
+#define CC_MD5_DIGEST_LENGTH 16
+#import <CommonCrypto/CommonCrypto.h>
+#import "NSString+LKString.h"
+#include <CommonCrypto/CommonDigest.h>
+#define kStringFormat(format,...) [NSString stringWithFormat:format,##__VA_ARGS__]
+
 
 
 @interface SelectIteamViewController ()<CBGroupAndStreamDelegate,UITextViewDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate>
@@ -48,6 +61,7 @@ return __singleton__; \
     NSMutableArray * categoryListID;//标签id list
     NSString *describeStr;//视频描述
     NSString *imgStr;//封面图片链接
+    NSString *dscrStr;//视频描述
     MBProgressHUD *hud;//加载loading
 }
 
@@ -87,29 +101,10 @@ return __singleton__; \
     self.imgaeS = [self getVideoPreViewImage:url];
     NSLog(@"imgaeS  === %@",self.imgaeS);
 
+    [self setUpLoadClient];
+    
     [self loadDate];
-    
-    NSDictionary *DicParams = @{
-        @"description":@"记录美好生活",
-        @"categoryIds":@[@"1",@"3",@"28"],
-        @"latitude":@"39.995156",
-        @"longitude":@"116.474060",
-        @"activityType":@"0",
-        @"remark":@"0.5625",
-        @"img":@"https://img.leshuapro.com/wangzhuang_images/a7276478-7bb2-477b-8fb4-f5c6f85e51dc.png",
-    };
-    
-    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
-    [HttpApi PostApiAddress:getUploadMessage  postParams:Params success:^(NSDictionary *resultDict) {
-        
-        self.uploadAddress = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAddress"]];
-        self.uploadAuth =  [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAuth"]];
-    
-        [self setUpLoadClient];
-        
-    } failure:^(NSDictionary *failureDict) {
-    }];
-    
+
     //隐藏键盘
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(keyboardHide)];
     tapGestureRecognizer.cancelsTouchesInView = NO;
@@ -123,9 +118,12 @@ return __singleton__; \
     self.uploader = [VODUploadClient new];
     __weak typeof(self) weakSelf = self;
     OnUploadFinishedListener FinishCallbackFunc = ^(UploadFileInfo* fileInfo, VodUploadResult* result){
+        [self hideHud];
+        [MBProgressHUD showMessage:[@"视频上传成功" localString] inView:self.view];
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
     };
     OnUploadFailedListener FailedCallbackFunc = ^(UploadFileInfo* fileInfo, NSString *code, NSString* message){
+        
         NSLog(@"upload failed callback code = %@, error message = %@", code, message);
     };
     OnUploadProgressListener ProgressCallbackFunc = ^(UploadFileInfo* fileInfo, long uploadedSize, long totalSize) {
@@ -141,10 +139,12 @@ return __singleton__; \
     };
     OnUploadRertyResumeListener RetryResumeCallbackFunc = ^{
         NSLog(@"upload retry end callback.");
+        
     };
     OnUploadStartedListener UploadStartedCallbackFunc = ^(UploadFileInfo* fileInfo) {
         NSLog(@"pload upload started callback.");
         //设置上传地址和上传凭证
+        [self showHud:@"视频上传中"];
         [weakSelf.uploader setUploadAuthAndAddress:fileInfo uploadAuth:weakSelf.uploadAuth uploadAddress:weakSelf.uploadAddress];
     };
     
@@ -160,69 +160,6 @@ return __singleton__; \
     [self.uploader setListener:self.listener];
 }
 
-- (void)loadDate{
-    [self showHud];
-    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
-    }];
-    [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
-        [self hideHud];
-        if(resultDict!=nil||resultDict!=NULL){
-            NSMutableArray *categoryList = [[NSMutableArray alloc]init];
-            self->shortVideoCategoryList = resultDict[@"data"][@"shortVideoCategoryList"];
-            for (int i = 0;i < self->shortVideoCategoryList.count; i++) {
-                [categoryList addObject:self->shortVideoCategoryList[i][@"title"]];
-            }
-            [self creatUI:categoryList];
-            
-        }else{
-        }
-    } failure:^(NSDictionary *failureDict) {
-    }];
-}
-
-- (void)replaceCoverBtnAct{
-    NSLog(@"更换封面");
-    
-    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:@"请选择方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:@"照相机" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [self openCamera];
-    }];
-    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:@"相册" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [self openAlbum];
-    }];
-    
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-    }];
-    
-    [alterConroller addAction:cameraAction];
-    [alterConroller addAction:albumAction];
-    [alterConroller addAction:cancelAction];
-    [self presentViewController:alterConroller animated:YES completion:nil];
-}
-
-/// 打开照相机
-- (void)openCamera{
-    if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) return;
-    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-    picker.sourceType = UIImagePickerControllerSourceTypeCamera;
-    picker.delegate = self;
-    [self presentViewController:picker animated:YES completion:nil];
-}
-
-/// 打开相册
-- (void)openAlbum{
-    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-    picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
-    picker.delegate = self;
-    [self presentViewController:picker animated:YES completion:nil];
-}
-
-#pragma mark - ******UIImagePickerControllerDelegate******
-- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
-    [picker dismissViewControllerAnimated:YES completion:nil];
-    viedoImage.image = info[UIImagePickerControllerOriginalImage];
-    NSLog(@"照片 ====信息%@",info);
-}
 
 - (void)confirmSelt{
     
@@ -248,21 +185,13 @@ return __singleton__; \
             int index = (int)[temArr[i] integerValue];
             [categoryListID addObject:[NSString stringWithFormat:@"%@",shortVideoCategoryList[index][@"id"]]];
         }
+        NSLog(@"categoryListID ===%@ ",categoryListID);
+
     }else{
     }
 }
 
 - (void)cb_selectCurrentValueWith:(NSString *)value index:(NSInteger)index groupId:(NSInteger)groupId {
-}
-
-
--(void)textViewDidChange:(UITextView *)textView
-{
-    if (_textPush.text.length == 0) {
-        _uilabel.text = @"可添加300个文字,我想说...";
-    }else{
-        _uilabel.text = @"";
-    }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -367,37 +296,42 @@ return __singleton__; \
 }
 
 -(void)TapImage:(UITapGestureRecognizer*)sender{
+}
+
+- (void)pushViedo{
+    NSLog(@"执行发布操作");
     
-    NSDictionary *DicParams = @{
-        @"userNum":@"12874664",
-    };
+    NSMutableDictionary *DicParams = [[NSMutableDictionary alloc]init];
+    [DicParams setValue:[NSString stringWithFormat:@"%@",dscrStr] forKey:@"description"];
+    [DicParams setValue:categoryListID forKey:@"categoryIds"];
+    [DicParams setValue:[NSString stringWithFormat:@"%@",@"39.995156"] forKey:@"latitude"];
+    [DicParams setValue:[NSString stringWithFormat:@"%@",@"116.474060"] forKey:@"longitude"];
+    [DicParams setValue:@"0" forKey:@"activityType"];
+    [DicParams setValue:@"0.5625" forKey:@"remark"];
+    if (imgStr != nil || imgStr.length != 0) {
+        [DicParams setValue:[NSString stringWithFormat:@"%@",imgStr] forKey:@"img"];
+    }
     
+    NSLog(@"执行发布操作 参数== %@",DicParams);
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
-    [HttpApi PostApiAddress:QueryUserFollowUrl  postParams:Params success:^(NSDictionary *resultDict) {
+    [HttpApi PostApiAddress:getUploadMessage  postParams:Params success:^(NSDictionary *resultDict) {
         
+        self.uploadAddress = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAddress"]];
+        self.uploadAuth =  [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAuth"]];
+        [self.uploader addFile:self.outputPath vodInfo:nil];
+        [self.uploader start];
+    
     } failure:^(NSDictionary *failureDict) {
     }];
 }
 
-
-- (void)pushViedo{
-    NSLog(@"执行发布操作");
-    [self.uploader addFile:self.outputPath vodInfo:nil];
-    [self.uploader start];
-    
-    NSLog(@"self.outputPath == %@",self.outputPath);
-    NSLog(@"uploadAuth ===%@ ",self.uploadAuth);
-    NSLog(@"uploadAddress ===%@ ",self.uploadAddress);
-}
-
-
 //========辅助工具(后续封装)==================================================
-- (void)showHud
+- (void)showHud:(NSString *)hudStr
 {
     hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
     hud.bezelView.color = [UIColor whiteColor];
     hud.bezelView.alpha = 0.8;
-    hud.label.text = @"加载中...";
+    hud.label.text = hudStr;
 }
 - (void)hideHud
 {
@@ -405,10 +339,107 @@ return __singleton__; \
         [self->hud hideAnimated:YES];
     });
 }
-
+//隐藏键盘
+-(void)textViewDidChange:(UITextView *)textView
+{
+    if (_textPush.text.length == 0) {
+        _uilabel.text = @"可添加300个文字,我想说...";
+    }else{
+        _uilabel.text = @"";
+    }
+    NSLog(@"000=== %@",textView.text);
+    dscrStr =textView.text;
+}
 - (void)keyboardHide
 {
     [self.view endEditing:YES];
 }
+
+
+- (void)loadDate{
+    [self showHud:@"加载中..."];
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
+    }];
+    [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
+        [self hideHud];
+        if(resultDict!=nil||resultDict!=NULL){
+            NSMutableArray *categoryList = [[NSMutableArray alloc]init];
+            self->shortVideoCategoryList = resultDict[@"data"][@"shortVideoCategoryList"];
+            for (int i = 0;i < self->shortVideoCategoryList.count; i++) {
+                [categoryList addObject:self->shortVideoCategoryList[i][@"title"]];
+            }
+            [self creatUI:categoryList];
+            
+        }else{
+        }
+    } failure:^(NSDictionary *failureDict) {
+    }];
+}
+
+- (void)replaceCoverBtnAct{
+    NSLog(@"更换封面");
+    
+    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:@"请选择方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:@"照相机" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self openCamera];
+    }];
+    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:@"相册" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self openAlbum];
+    }];
+    
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    }];
+    
+    [alterConroller addAction:cameraAction];
+    [alterConroller addAction:albumAction];
+    [alterConroller addAction:cancelAction];
+    [self presentViewController:alterConroller animated:YES completion:nil];
+}
+
+/// 打开照相机
+- (void)openCamera{
+    if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) return;
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    picker.delegate = self;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+/// 打开相册
+- (void)openAlbum{
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
+    picker.delegate = self;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+
+#pragma mark - ******UIImagePickerControllerDelegate******
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    viedoImage.image = info[UIImagePickerControllerOriginalImage];
+    UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];///原图
+    [self UpPic:image];
+    NSLog(@"照片 ====信息%@",info);
+}
+
+//上传图片
+-(void)UpPic:(UIImage *)img
+{
+    NSDictionary *DicParams = @{
+        @"img":img,
+        @"type":@"2",
+    };
+    [self showHud:@"加载中..."];
+    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
+    [HttpApi ImagePostApiAddress:getUploadImg  postParams:Params success:^(NSDictionary *resultDict) {
+        NSLog(@"图片上传成功数据 ====%@",resultDict);
+        self->imgStr = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"URL"][@"readPath"]];
+        [self hideHud];
+        
+    } failure:^(NSDictionary *failureDict) {
+        [self hideHud];
+    }];
+}
+
 
 @end

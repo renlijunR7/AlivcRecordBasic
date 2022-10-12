@@ -41,6 +41,8 @@ CLASS_AS_SINGLETON(HttpPresenter);
  */
 -(void)PostApiAddress:(NSString*)url postParams:(NSMutableDictionary*)postParams success:(HttpSuccessHandler)result failure:(HttpFailHandler)failure;
 
+//图片上传
+-(void)ImagePostApiAddress:(NSString*)url postParams:(NSMutableDictionary*)postParams success:(HttpSuccessHandler)result failure:(HttpFailHandler)failure;
 
 
 @end

@@ -13,6 +13,7 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import "NSString+LKString.h"
 #include <CommonCrypto/CommonDigest.h>
+#import "MBProgressHUD.h"
 
 
 #define CurUser         [BLUser sharedInstance]
@@ -41,34 +42,20 @@
     manager.responseSerializer = [AFJSONResponseSerializer serializer];
     manager.requestSerializer=[AFJSONRequestSerializer serializer];
     [manager.responseSerializer setAcceptableContentTypes: [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",@"text/css",@"text/plain", nil]];
-    manager.requestSerializer.timeoutInterval = 100.0f;
+    manager.requestSerializer.timeoutInterval = 1000.0f;
     
     //添加Header
-    //    [manager.requestSerializer setValue:@"close" forHTTPHeaderField:@"Connection"];
-    //    [requestSerializer setValue:@"appVersion" forHTTPHeaderField:CurUser.appVersion];
-    //    [requestSerializer setValue:@"appType" forHTTPHeaderField:CurUser.appType];
-    //    [requestSerializer setValue:@"appName" forHTTPHeaderField:CurUser.appName];
-    //    [requestSerializer setValue:@"Accept-Language" forHTTPHeaderField:CurUser.AcceptLanguage];
-    //    [requestSerializer setValue:@"androidChannel" forHTTPHeaderField:CurUser.androidChannel];
-    //    [requestSerializer setValue:@"appTheme" forHTTPHeaderField:CurUser.appTheme];
-    //    [requestSerializer setValue:@"appFixVersion" forHTTPHeaderField:CurUser.appFixVersion];
-    //    [requestSerializer setValue:@"deviceToken" forHTTPHeaderField:CurUser.deviceToken];
-    //    [requestSerializer setValue:@"deviceName" forHTTPHeaderField:CurUser.deviceName];
-    //    [requestSerializer setValue:@"accessToken" forHTTPHeaderField:CurUser.accessToken];
-    
-    
-    [manager.requestSerializer setValue:@"close" forHTTPHeaderField:@"Connection"];
-    [manager.requestSerializer setValue:@"1.2.4" forHTTPHeaderField:@"appVersion"];
-    [manager.requestSerializer setValue:@"android" forHTTPHeaderField:@"appType"];
-    [manager.requestSerializer setValue:@"DeTok" forHTTPHeaderField:@"appName"];
-    [manager.requestSerializer setValue:@"zh-CN" forHTTPHeaderField:@"Accept-Language"];
-    [manager.requestSerializer setValue:@"" forHTTPHeaderField:@"androidChannel"];
-    [manager.requestSerializer setValue:@"background_white" forHTTPHeaderField:@"appTheme"];
-    [manager.requestSerializer setValue:@"0" forHTTPHeaderField:@"appFixVersion"];
-    [manager.requestSerializer setValue:@"861533030498297" forHTTPHeaderField:@"deviceToken"];
-    [manager.requestSerializer setValue:@"EVA-AL10" forHTTPHeaderField:@"deviceName"];
-    [manager.requestSerializer setValue:@"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJJOVBqWkRTbVVnR0tKV1U3IjoiVjR5eGlmMXVKZE1xYlhtMUZuckJpTURWQUJGdHJFTmM2aDQ1RDFIZXc2bkR3TzRybFQ4WFJ5M2hqUkMrIiwiaXNzIjoiektPUlI1b0FDd3RAcml0SzJVSThZNEokKlQjY3pIem0iLCJpYXQiOjE2NjWjN5lhlivCyxJ9XdHQwMTQ2NDgsImF1ZCI6Im02bHU3RnVaeVV2MUJYZWUiLCJleHAiOjE2NjY2MDY2NDgsIm5iZiI6MTY219zS0ndsnV6NDAxNDY0OH0.BrWq7009wZL21VP84pAlvMLPCEC03vad-hQFEPng1-4Bkt5o" forHTTPHeaderField:@"accessToken"];
-    
+    [manager.requestSerializer setValue:CurUser.appVersion  forHTTPHeaderField:@"appVersion"];
+    [manager.requestSerializer setValue:CurUser.appType  forHTTPHeaderField:@"appType"];
+    [manager.requestSerializer setValue:CurUser.appName forHTTPHeaderField: @"appName"];
+    [manager.requestSerializer setValue:CurUser.AcceptLanguage  forHTTPHeaderField:@"Accept-Language"];
+    [manager.requestSerializer setValue:CurUser.androidChannel forHTTPHeaderField:@"androidChannel"];
+    [manager.requestSerializer setValue:CurUser.appTheme  forHTTPHeaderField:@"appTheme"];
+    [manager.requestSerializer setValue:CurUser.appFixVersion  forHTTPHeaderField:@"appFixVersion"];
+    [manager.requestSerializer setValue:CurUser.deviceToken  forHTTPHeaderField:@"deviceToken"];
+    [manager.requestSerializer setValue:CurUser.deviceName forHTTPHeaderField:@"deviceName"];
+    [manager.requestSerializer setValue:CurUser.accessToken  forHTTPHeaderField:@"accessToken"];
+
     // 跳过验签
     [manager.requestSerializer setValue:@"123456@ls" forHTTPHeaderField:@"testPwd"];
     [manager.requestSerializer setValue:@"100224226906" forHTTPHeaderField:@"userId"];
@@ -330,5 +317,101 @@
     }
     return dataOut;
 }
+
+
+- (void)PostImgaeApiAddress:(NSString *)apiAddress
+           withLoading:(BOOL)loading
+            postParams:(NSMutableDictionary *)params
+               success:(void (^)(NSDictionary *successDict))success
+               failure:(void (^)(NSError *failDict))failure
+                      error:(void (^)(NSDictionary *errorDict))dealError{
+    
+    
+    //压缩图片
+    NSData *imageData = UIImageJPEGRepresentation(params[@"img"],0);
+    //沙盒，准备保存的图片地址和图片名称
+    NSDateFormatter *formatter=[[NSDateFormatter alloc]init];
+    formatter.dateFormat=@"yyyyMMddHHmmss";
+    NSString *str=[formatter stringFromDate:[NSDate date]];
+    NSString *fullPath = [[NSHomeDirectory() stringByAppendingPathComponent:@"Documents"] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpeg",str]];
+    //将图片写入文件中
+    [imageData writeToFile:fullPath atomically:NO];
+
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    manager.requestSerializer.timeoutInterval = 20;
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"text/plain", @"multipart/form-data", @"application/json", @"text/html", @"image/jpeg", @"image/png", @"application/octet-stream", @"text/json", nil];
+
+    //添加Header
+    [manager.requestSerializer setValue:CurUser.appVersion  forHTTPHeaderField:@"appVersion"];
+    [manager.requestSerializer setValue:CurUser.appType  forHTTPHeaderField:@"appType"];
+    [manager.requestSerializer setValue:CurUser.appName forHTTPHeaderField: @"appName"];
+    [manager.requestSerializer setValue:CurUser.AcceptLanguage  forHTTPHeaderField:@"Accept-Language"];
+    [manager.requestSerializer setValue:CurUser.androidChannel forHTTPHeaderField:@"androidChannel"];
+    [manager.requestSerializer setValue:CurUser.appTheme  forHTTPHeaderField:@"appTheme"];
+    [manager.requestSerializer setValue:CurUser.appFixVersion  forHTTPHeaderField:@"appFixVersion"];
+    [manager.requestSerializer setValue:CurUser.deviceToken  forHTTPHeaderField:@"deviceToken"];
+    [manager.requestSerializer setValue:CurUser.deviceName forHTTPHeaderField:@"deviceName"];
+    [manager.requestSerializer setValue:CurUser.accessToken  forHTTPHeaderField:@"accessToken"];
+
+    // 跳过验签
+    [manager.requestSerializer setValue:@"123456@ls" forHTTPHeaderField:@"testPwd"];
+    [manager.requestSerializer setValue:@"100224226906" forHTTPHeaderField:@"userId"];
+    
+    //1.获取uuid
+    NSString *appNonce = [self uuidStr];
+    appNonce = [appNonce lowercaseString];
+    NSLog(@"appNonce:%@",appNonce);
+    
+    //2.生成时间戳
+    NSString *appTimeStamp = [self appTimeStamp];
+    NSLog(@"appTimeStamp:%@",appTimeStamp);
+    
+    //3.:字典ASCII码排序并MD5加密
+    NSMutableDictionary *tempDic = [[NSMutableDictionary alloc]init];
+    [tempDic setValue:appNonce forKey:@"appNonce"];
+    [tempDic setValue:appTimeStamp forKey:@"appTimeStamp"];
+    
+    //4.把其他的参数添加到tempDic
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    [dict setObject:params[@"type"] forKey:@"type"];
+    [dict setObject:fullPath forKey:@"file"];
+    
+    [tempDic addEntriesFromDictionary:dict];
+    
+    //5.appNonce转成小写
+    [tempDic setValue:appNonce forKey:@"appNonce"];
+    NSLog(@"tempDic === :%@",tempDic);
+    
+    //6.加入_signKey 并且进行mad5加密
+    NSString * sign = [self createMd5Sign:tempDic];
+    [tempDic setValue:sign forKey:@"appSign"];
+    
+    NSString *url = [NSString stringWithFormat:@"%@%@",ServerIP,getUploadImg];
+    //MBProgressHUD *hub = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    [manager POST:url parameters:dict constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+
+        /* 该方法参数
+         appendPartWithFileData：要上传的照片二进制流
+         name：对应后台要上传接口的参数名
+         fileName：要保存的文件名
+         mimeType：要保存到服务器的文件类型
+         */
+        [formData appendPartWithFileData:imageData name:@"file" fileName:fullPath mimeType:@"image/png"];
+
+    } progress:^(NSProgress * _Nonnull uploadProgress) {
+
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        
+        success(responseObject);
+        NSLog(@"请求结果 === %@",responseObject);
+
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        failure(error);
+        //[hub hideAnimated:YES];
+        NSLog(@"上传失败");
+
+    }];
+}
+
 
 @end

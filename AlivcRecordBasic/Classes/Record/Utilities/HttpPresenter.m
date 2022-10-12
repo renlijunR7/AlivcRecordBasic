@@ -32,5 +32,22 @@ CLASS_DEF_SINGLETON(HttpPresenter);
     }];
 }
 
+-(void)ImagePostApiAddress:(NSString*)url postParams:(NSMutableDictionary*)postParams success:(HttpSuccessHandler)result failure:(HttpFailHandler)failure{
+    
+    [self PostImgaeApiAddress:url withLoading:NO  postParams:postParams success:^(NSDictionary *successDict) {
+        if (result) {
+            result(successDict);
+        }
+    } failure:^(NSDictionary *failDict) {
+        if (failure) {
+            failure(failDict);
+        }
+    } error:^(NSDictionary *errorDict) {
+        if (failure) {
+            failure(errorDict);
+        }
+    }];
+}
+
 
 @end

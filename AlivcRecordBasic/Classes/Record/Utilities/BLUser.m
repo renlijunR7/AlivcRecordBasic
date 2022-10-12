@@ -21,7 +21,6 @@ CLASS_DEF_SINGLETON(BLUser);
     self = [super init];
     if (self)
     {
-        self.contentType = @"";
         self.charset = @"";
         self.appVersion = @"";
         self.appType = @"";
@@ -33,7 +32,8 @@ CLASS_DEF_SINGLETON(BLUser);
         self.deviceToken = @"";
         self.deviceName = @"";
         self.accessToken = @"";
-        
+        self.online = @"";
+        self.signKey = @"";
         
         [self loadData];
     }
@@ -63,11 +63,9 @@ CLASS_DEF_SINGLETON(BLUser);
     }
 }
 
-
 - (void)saveData
 {
     NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
-    [dict setValue:self.contentType forKey:@"content-typ"];
     [dict setValue:self.charset forKey:@"charset"];
     [dict setValue:self.appVersion forKey:@"appVersion"];
     [dict setValue:self.appType forKey:@"appType"];
@@ -79,6 +77,8 @@ CLASS_DEF_SINGLETON(BLUser);
     [dict setValue:self.deviceToken forKey:@"deviceToken"];
     [dict setValue:self.deviceName forKey:@"deviceName"];
     [dict setValue:self.accessToken forKey:@"accessToken"];
+    [dict setValue:self.online forKey:@"online"];
+    [dict setValue:self.signKey forKey:@"signKey"];
 
     NSData *userData = [NSKeyedArchiver archivedDataWithRootObject:dict];
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
@@ -89,7 +89,6 @@ CLASS_DEF_SINGLETON(BLUser);
 
 
 - (void)quitLogin {
-    self.contentType = @"";
     self.charset = @"";
     self.appVersion = @"";
     self.appType = @"";
@@ -101,9 +100,10 @@ CLASS_DEF_SINGLETON(BLUser);
     self.deviceToken = @"";
     self.deviceName = @"";
     self.accessToken = @"";
+    self.online = @"";
+    self.signKey = @"";
     
     [self saveData];
 }
-
 
 @end

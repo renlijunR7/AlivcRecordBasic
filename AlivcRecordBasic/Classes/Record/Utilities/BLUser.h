@@ -29,7 +29,7 @@ return __singleton__; \
 
 
 CLASS_AS_SINGLETON(BLUser);
-@property(nonatomic,strong) NSString *contentType;
+
 @property(nonatomic,strong) NSString *charset;
 @property(nonatomic,strong) NSString *appVersion;
 @property(nonatomic,strong) NSString *appType;
@@ -41,8 +41,8 @@ CLASS_AS_SINGLETON(BLUser);
 @property(nonatomic,strong) NSString *deviceToken;
 @property(nonatomic,strong) NSString *deviceName;
 @property(nonatomic,strong) NSString *accessToken;
-
-
+@property(nonatomic,strong) NSString *online;
+@property(nonatomic,strong) NSString *signKey;
 
 - (void)saveData;
 

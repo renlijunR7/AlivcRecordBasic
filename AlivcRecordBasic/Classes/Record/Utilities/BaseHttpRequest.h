@@ -32,4 +32,14 @@
                failure:(void (^)(NSDictionary *failDict))failure
                  error:(void (^)(NSDictionary *errorDict))dealError;
 
+
+//上传单张图片
+- (void)PostImgaeApiAddress:(NSString *)apiAddress
+           withLoading:(BOOL)loading
+            postParams:(NSMutableDictionary *)params
+               success:(void (^)(NSDictionary *successDict))success
+               failure:(void (^)(NSDictionary *failDict))failure
+                 error:(void (^)(NSDictionary *errorDict))dealError;
+
+
 @end

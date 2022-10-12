@@ -32,6 +32,8 @@
 
 #define getUploadMessage         @"api/shortVideo/getUploadMessage"
 
+//上传图片
+#define getUploadImg         @"api/file/uploadImg"
 
 
 #endif /* ServiceGeneral_h */
