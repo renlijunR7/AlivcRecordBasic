@@ -21,7 +21,6 @@
 #import "AFHTTPSessionManager.h"
 
 
-
 #import <VODUpload/VODUploadClient.h>
 
 /*================================================================*/
@@ -91,7 +90,7 @@ return __singleton__; \
     [super viewDidLoad];
     
     
-    self.title = @"发布";
+    self.title =NSLocalizedString(@"release", nil);
     self.view.backgroundColor = [UIColor blackColor];
     shortVideoCategoryList = [NSArray alloc];
     categoryListID = [[NSMutableArray alloc]init];
@@ -119,7 +118,7 @@ return __singleton__; \
     __weak typeof(self) weakSelf = self;
     OnUploadFinishedListener FinishCallbackFunc = ^(UploadFileInfo* fileInfo, VodUploadResult* result){
         [self hideHud];
-        [MBProgressHUD showMessage:[@"视频上传成功" localString] inView:self.view];
+        [MBProgressHUD showMessage:NSLocalizedString(@"video_uploaded_successfully", nil) inView:self.view];
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
     };
     OnUploadFailedListener FailedCallbackFunc = ^(UploadFileInfo* fileInfo, NSString *code, NSString* message){
@@ -144,7 +143,7 @@ return __singleton__; \
     OnUploadStartedListener UploadStartedCallbackFunc = ^(UploadFileInfo* fileInfo) {
         NSLog(@"pload upload started callback.");
         //设置上传地址和上传凭证
-        [self showHud:@"视频上传中"];
+        [self showHud:NSLocalizedString(@"upload_video", nil)];
         [weakSelf.uploader setUploadAuthAndAddress:fileInfo uploadAuth:weakSelf.uploadAuth uploadAddress:weakSelf.uploadAddress];
     };
     
@@ -166,7 +165,7 @@ return __singleton__; \
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
-        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:@"发布规则" message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"] sureBtn:@"我知道了" cancleBtn:@""];
+        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:NSLocalizedString(@"release_rules", nil) message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"] sureBtn:NSLocalizedString(@"i_know", nil) cancleBtn:@""];
         xlAlertView.resultIndex = ^(NSInteger index){
         };
         [xlAlertView showXLAlertView];
@@ -212,7 +211,7 @@ return __singleton__; \
     self.navigationController.view.backgroundColor =[UIColor blackColor];
     
     UIButton * rightBut = [UIButton buttonWithType:UIButtonTypeCustom];
-    [rightBut setTitle:@"规则" forState:UIControlStateNormal];
+    [rightBut setTitle:NSLocalizedString(@"rules", nil) forState:UIControlStateNormal];
     [rightBut setFrame:CGRectMake(0, 0, 40, 40)];
     [rightBut setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     rightBut.titleLabel.font = [UIFont systemFontOfSize:14];
@@ -228,7 +227,7 @@ return __singleton__; \
     [_scrView addSubview:_textPush];
     
     _uilabel = [[UILabel alloc]initWithFrame:CGRectMake(10 ,10,200, 20)];
-    _uilabel.text = @"可添加300个文字,我想说...";
+    _uilabel.text = NSLocalizedString(@"add_words", nil);
     _uilabel.font = [UIFont systemFontOfSize:15];
     _uilabel.textColor = [UIColor whiteColor];
     _uilabel.enabled = NO;
@@ -239,14 +238,14 @@ return __singleton__; \
     _pushBtn.layer.cornerRadius = 6;
     _pushBtn.layer.masksToBounds = YES;
     [_pushBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_pushBtn setTitle:@"发布" forState:UIControlStateNormal];
+    [_pushBtn setTitle:NSLocalizedString(@"release", nil) forState:UIControlStateNormal];
     [_pushBtn addTarget:self action:@selector(pushViedo) forControlEvents:UIControlEventTouchUpInside];
     _pushBtn.backgroundColor = [UIColor gradientColorWithSize:_pushBtn.frame.size
                                                     direction:GradientColorDirectionLevel
                                                    startColor:rgba(255, 111, 77, 1)
                                                      endColor:rgba(252, 24, 73, 1)];
     [self.view addSubview:_pushBtn];
-    NSArray * titleArr = @[@"视频话题（可多选）"];
+    NSArray * titleArr = @[NSLocalizedString(@"video_topics", nil)];
     NSArray *contentArr = @[arrList];
     
     CBGroupAndStreamView * silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
@@ -272,7 +271,7 @@ return __singleton__; \
     [_scrView addSubview:viedoImage];
     
     UIButton *replaceCoverBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,CGRectGetMaxY(viedoImage.frame)+8, 100, 20)];
-    [replaceCoverBtn setTitle:@"更换封面" forState:UIControlStateNormal];
+    [replaceCoverBtn setTitle:NSLocalizedString(@"replace_cover", nil) forState:UIControlStateNormal];
     [replaceCoverBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     replaceCoverBtn.titleLabel.font = [UIFont systemFontOfSize:14];
     [replaceCoverBtn addTarget:self action:@selector(replaceCoverBtnAct) forControlEvents:UIControlEventTouchUpInside];
@@ -343,7 +342,7 @@ return __singleton__; \
 -(void)textViewDidChange:(UITextView *)textView
 {
     if (_textPush.text.length == 0) {
-        _uilabel.text = @"可添加300个文字,我想说...";
+        _uilabel.text = NSLocalizedString(@"add_words", nil);
     }else{
         _uilabel.text = @"";
     }
@@ -357,7 +356,7 @@ return __singleton__; \
 
 
 - (void)loadDate{
-    [self showHud:@"加载中..."];
+    [self showHud:NSLocalizedString(@"loading", nil)];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
@@ -379,15 +378,15 @@ return __singleton__; \
 - (void)replaceCoverBtnAct{
     NSLog(@"更换封面");
     
-    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:@"请选择方式" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:@"照相机" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"select_method", nil) message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"camera", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self openCamera];
     }];
-    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:@"相册" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"photo_album", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self openAlbum];
     }];
     
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"cancel", nil) style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
     }];
     
     [alterConroller addAction:cameraAction];
