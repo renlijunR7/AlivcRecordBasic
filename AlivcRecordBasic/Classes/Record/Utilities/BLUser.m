@@ -70,7 +70,7 @@ CLASS_DEF_SINGLETON(BLUser);
     [dict setValue:self.appVersion forKey:@"appVersion"];
     [dict setValue:self.appType forKey:@"appType"];
     [dict setValue:self.appName forKey:@"appName"];
-    [dict setValue:self.AcceptLanguage forKey:@"Accept-Language"];
+    [dict setValue:self.AcceptLanguage forKey:@"appLanguage"];
     [dict setValue:self.androidChannel forKey:@"androidChannel"];
     [dict setValue:self.appTheme forKey:@"appTheme"];
     [dict setValue:self.appFixVersion forKey:@"appFixVersion"];
