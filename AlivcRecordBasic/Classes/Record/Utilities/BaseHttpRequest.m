@@ -48,7 +48,7 @@
     [manager.requestSerializer setValue:CurUser.appVersion  forHTTPHeaderField:@"appVersion"];
     [manager.requestSerializer setValue:CurUser.appType  forHTTPHeaderField:@"appType"];
     [manager.requestSerializer setValue:CurUser.appName forHTTPHeaderField: @"appName"];
-    [manager.requestSerializer setValue:CurUser.AcceptLanguage  forHTTPHeaderField:@"appLanguage"];
+    [manager.requestSerializer setValue:CurUser.appLanguage  forHTTPHeaderField:@"appLanguage"];
     [manager.requestSerializer setValue:CurUser.androidChannel forHTTPHeaderField:@"androidChannel"];
     [manager.requestSerializer setValue:CurUser.appTheme  forHTTPHeaderField:@"appTheme"];
     [manager.requestSerializer setValue:CurUser.appFixVersion  forHTTPHeaderField:@"appFixVersion"];
@@ -345,7 +345,7 @@
     [manager.requestSerializer setValue:CurUser.appVersion  forHTTPHeaderField:@"appVersion"];
     [manager.requestSerializer setValue:CurUser.appType  forHTTPHeaderField:@"appType"];
     [manager.requestSerializer setValue:CurUser.appName forHTTPHeaderField: @"appName"];
-    [manager.requestSerializer setValue:CurUser.AcceptLanguage  forHTTPHeaderField:@"Accept-Language"];
+    [manager.requestSerializer setValue:CurUser.appLanguage  forHTTPHeaderField:@"Accept-Language"];
     [manager.requestSerializer setValue:CurUser.androidChannel forHTTPHeaderField:@"androidChannel"];
     [manager.requestSerializer setValue:CurUser.appTheme  forHTTPHeaderField:@"appTheme"];
     [manager.requestSerializer setValue:CurUser.appFixVersion  forHTTPHeaderField:@"appFixVersion"];

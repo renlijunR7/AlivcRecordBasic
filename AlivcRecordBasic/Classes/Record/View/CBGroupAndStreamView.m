@@ -14,6 +14,10 @@
 #define CBColor(r,g,b) [UIColor colorWithRed:r / 255.0 green:g / 255.0 blue:b / 255.0 alpha:1]
 
 @interface CBGroupAndStreamView()
+{
+    NSMutableArray * tempSaveArr;
+}
+
 //滚动视图
 @property (strong,nonatomic) UIScrollView *scroller;
 //最后一个按钮的frame
@@ -247,12 +251,18 @@
  @param sender 按钮
  */
 - (void)butClick:(UIButton *)sender{
-    sender.selected = !sender.selected;
-    if (_singleFlagArr.count > 0) {
-        [_singleFlagArr[sender.tag / 100] isEqual:@1] ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
-        return;
+
+    if (tempSaveArr.count >4) {
+        
+    }else{
+        sender.selected = !sender.selected;
+        if (_singleFlagArr.count > 0) {
+            [_singleFlagArr[sender.tag / 100] isEqual:@1] ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
+            return;
+        }
+        _isSingle ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
+        
     }
-    _isSingle ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
 }
 
 #pragma mark---单选
@@ -295,7 +305,7 @@
 - (void)contentMultipleWith:(UIButton *)sender{
 
     NSString * valueStr = @"";
-    NSMutableArray * tempSaveArr = nil;
+    tempSaveArr = nil;
     if (self.saveSelButValueArr.count > 0) {
         tempSaveArr = [self.saveSelButValueArr[sender.tag / 100] isKindOfClass:[NSArray class]] ? [NSMutableArray arrayWithArray:self.saveSelButValueArr[sender.tag / 100]] : [[NSMutableArray alloc] init];
     }else{
@@ -305,6 +315,7 @@
     //valueStr = [NSString stringWithFormat:@"%ld/%@",sender.tag % 100 - 1,self.dataSourceArr[sender.tag / 100][sender.tag % 100 - 1]];
     valueStr = [NSString stringWithFormat:@"%ld",sender.tag % 100 - 1];
     
+
     if (sender.selected) {
         //sender.backgroundColor = _selColor;
         sender.layer.borderColor = _selColor.CGColor;

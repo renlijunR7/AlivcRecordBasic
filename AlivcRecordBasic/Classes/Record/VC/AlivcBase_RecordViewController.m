@@ -554,7 +554,7 @@
         _durationLabel.center = p;
         _durationLabel.textAlignment = 1;
         _durationLabel.textColor = [AliyunIConfig config].durationLabelTextColor;
-        _durationLabel.font = [UIFont systemFontOfSize:10];
+        _durationLabel.font = [UIFont systemFontOfSize:16];
         _durationLabel.hidden = YES;
         _durationLabel.text = @"00:00";
     }

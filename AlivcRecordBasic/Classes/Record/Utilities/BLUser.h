@@ -34,7 +34,7 @@ CLASS_AS_SINGLETON(BLUser);
 @property(nonatomic,strong) NSString *appVersion;
 @property(nonatomic,strong) NSString *appType;
 @property(nonatomic,strong) NSString *appName;
-@property(nonatomic,strong) NSString *AcceptLanguage;
+@property(nonatomic,strong) NSString *appLanguage;
 @property(nonatomic,strong) NSString *androidChannel;
 @property(nonatomic,strong) NSString *appTheme;
 @property(nonatomic,strong) NSString *appFixVersion;

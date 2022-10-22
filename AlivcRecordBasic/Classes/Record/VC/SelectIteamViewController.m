@@ -57,6 +57,7 @@ return __singleton__; \
 {
     UIImageView *viedoImage;
     NSArray * shortVideoCategoryList;
+    CBGroupAndStreamView * silde;
     NSMutableArray * categoryListID;//标签id list
     NSString *describeStr;//视频描述
     NSString *imgStr;//封面图片链接
@@ -118,8 +119,13 @@ return __singleton__; \
     __weak typeof(self) weakSelf = self;
     OnUploadFinishedListener FinishCallbackFunc = ^(UploadFileInfo* fileInfo, VodUploadResult* result){
         [self hideHud];
-        [MBProgressHUD showMessage:NSLocalizedString(@"video_uploaded_successfully", nil) inView:self.view];
+        
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    
+            [self.navigationController popToRootViewControllerAnimated:YES];
+        });
     };
     OnUploadFailedListener FailedCallbackFunc = ^(UploadFileInfo* fileInfo, NSString *code, NSString* message){
         
@@ -200,7 +206,7 @@ return __singleton__; \
 }
 
 -(void)creatUI:(NSArray *)arrList{
-    _scrView = [[UIScrollView alloc]initWithFrame:CGRectMake(0, 0, ScreenWidth, ScreenHeight - 180)];
+    _scrView = [[UIScrollView alloc]initWithFrame:CGRectMake(0, IS_IPHONEX==YES?0:60, ScreenWidth, IS_IPHONEX==YES?ScreenHeight - 180:ScreenHeight - 120)];
     _scrView.scrollEnabled = YES;
     _scrView.userInteractionEnabled = YES;
     _scrView.backgroundColor = [UIColor blackColor];
@@ -221,6 +227,7 @@ return __singleton__; \
     _textPush = [[UITextView alloc]initWithFrame:CGRectMake(20 ,25, ScreenWidth - 40, 150)];
     _textPush.backgroundColor =  rgba(41, 41, 45, 1);
     _textPush.delegate = self;
+    _textPush.font = [UIFont systemFontOfSize:15];
     _textPush.layer.cornerRadius = 6;
     _textPush.layer.masksToBounds = YES;
     _textPush.textColor = [UIColor whiteColor];
@@ -233,7 +240,7 @@ return __singleton__; \
     _uilabel.enabled = NO;
     [_textPush addSubview:_uilabel];
     
-    _pushBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,ScreenHeight - 165, ScreenWidth - 40, 45)];
+    _pushBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,IS_IPHONEX==YES?ScreenHeight - 165:ScreenHeight - 60, ScreenWidth - 40, 45)];
     _pushBtn.backgroundColor = [UIColor redColor];
     _pushBtn.layer.cornerRadius = 6;
     _pushBtn.layer.masksToBounds = YES;
@@ -248,7 +255,7 @@ return __singleton__; \
     NSArray * titleArr = @[NSLocalizedString(@"video_topics", nil)];
     NSArray *contentArr = @[arrList];
     
-    CBGroupAndStreamView * silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
+    silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
     silde.delegate = self;
     silde.isDefaultSel = NO;
     silde.isSingle = NO;
@@ -271,6 +278,7 @@ return __singleton__; \
     [_scrView addSubview:viedoImage];
     
     UIButton *replaceCoverBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,CGRectGetMaxY(viedoImage.frame)+8, 100, 20)];
+    replaceCoverBtn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
     [replaceCoverBtn setTitle:NSLocalizedString(@"replace_cover", nil) forState:UIControlStateNormal];
     [replaceCoverBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     replaceCoverBtn.titleLabel.font = [UIFont systemFontOfSize:14];
@@ -300,28 +308,36 @@ return __singleton__; \
 - (void)pushViedo{
     NSLog(@"执行发布操作");
     
-    NSMutableDictionary *DicParams = [[NSMutableDictionary alloc]init];
-    [DicParams setValue:[NSString stringWithFormat:@"%@",dscrStr] forKey:@"description"];
-    [DicParams setValue:categoryListID forKey:@"categoryIds"];
-    [DicParams setValue:[NSString stringWithFormat:@"%@",@"39.995156"] forKey:@"latitude"];
-    [DicParams setValue:[NSString stringWithFormat:@"%@",@"116.474060"] forKey:@"longitude"];
-    [DicParams setValue:@"0" forKey:@"activityType"];
-    [DicParams setValue:@"0.5625" forKey:@"remark"];
-    if (imgStr != nil || imgStr.length != 0) {
-        [DicParams setValue:[NSString stringWithFormat:@"%@",imgStr] forKey:@"img"];
+    if (dscrStr == nil || dscrStr.length == 0) {
+        [MBProgressHUD showMessage:NSLocalizedString(@"videoDescription", nil) inView:self.view];
+    }else if(categoryListID.count == 0){
+        [MBProgressHUD showMessage:NSLocalizedString(@"videoTopic", nil) inView:self.view];
+    }else{
+        NSMutableDictionary *DicParams = [[NSMutableDictionary alloc]init];
+        [DicParams setValue:[NSString stringWithFormat:@"%@",dscrStr] forKey:@"description"];
+        [DicParams setValue:categoryListID forKey:@"categoryIds"];
+        [DicParams setValue:[NSString stringWithFormat:@"%@",@"39.995156"] forKey:@"latitude"];
+        [DicParams setValue:[NSString stringWithFormat:@"%@",@"116.474060"] forKey:@"longitude"];
+        [DicParams setValue:@"0" forKey:@"activityType"];
+        [DicParams setValue:@"0.5625" forKey:@"remark"];
+        if (imgStr != nil || imgStr.length != 0) {
+            [DicParams setValue:[NSString stringWithFormat:@"%@",imgStr] forKey:@"img"];
+        }
+        
+        NSLog(@"执行发布操作 参数== %@",DicParams);
+        NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
+        [HttpApi PostApiAddress:getUploadMessage  postParams:Params success:^(NSDictionary *resultDict) {
+            
+            self.uploadAddress = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAddress"]];
+            self.uploadAuth =  [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAuth"]];
+            [self.uploader addFile:self.outputPath vodInfo:nil];
+            [self.uploader start];
+        
+        } failure:^(NSDictionary *failureDict) {
+        }];
     }
     
-    NSLog(@"执行发布操作 参数== %@",DicParams);
-    NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
-    [HttpApi PostApiAddress:getUploadMessage  postParams:Params success:^(NSDictionary *resultDict) {
-        
-        self.uploadAddress = [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAddress"]];
-        self.uploadAuth =  [NSString stringWithFormat:@"%@",resultDict[@"data"][@"uploadAuth"]];
-        [self.uploader addFile:self.outputPath vodInfo:nil];
-        [self.uploader start];
-    
-    } failure:^(NSDictionary *failureDict) {
-    }];
+
 }
 
 //========辅助工具(后续封装)==================================================
@@ -353,6 +369,17 @@ return __singleton__; \
 {
     [self.view endEditing:YES];
 }
+-(BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+ {
+     if ([text isEqualToString:@""]) {
+         return YES;
+     }if (range.location>= 300){
+         return NO;
+     }else{
+         return YES;
+     }
+}
+
 
 
 - (void)loadDate{
@@ -428,7 +455,7 @@ return __singleton__; \
         @"img":img,
         @"type":@"2",
     };
-    [self showHud:@"加载中..."];
+    [self showHud:NSLocalizedString(@"loading", nil)];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
     [HttpApi ImagePostApiAddress:getUploadImg  postParams:Params success:^(NSDictionary *resultDict) {
         NSLog(@"图片上传成功数据 ====%@",resultDict);
