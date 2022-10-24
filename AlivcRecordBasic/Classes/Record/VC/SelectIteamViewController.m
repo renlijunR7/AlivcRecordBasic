@@ -19,6 +19,7 @@
 #import "MBProgressHUD.h"
 #import "MBProgressHUD+AlivcHelper.h"
 #import "AFHTTPSessionManager.h"
+#import "CBToast.h"
 
 
 #import <VODUpload/VODUploadClient.h>
@@ -90,7 +91,6 @@ return __singleton__; \
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    
     self.title =NSLocalizedString(@"release", nil);
     self.view.backgroundColor = [UIColor blackColor];
     shortVideoCategoryList = [NSArray alloc];
@@ -101,6 +101,7 @@ return __singleton__; \
     self.imgaeS = [self getVideoPreViewImage:url];
     NSLog(@"imgaeS  === %@",self.imgaeS);
 
+    
     [self setUpLoadClient];
     
     [self loadDate];
@@ -121,9 +122,11 @@ return __singleton__; \
         [self hideHud];
         
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
+        [CBToast showToast:NSLocalizedString(@"uploaded_success", nil) location:@"" showTime:1.0];
         
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
             [self.navigationController popToRootViewControllerAnimated:YES];
         });
     };
@@ -144,7 +147,6 @@ return __singleton__; \
     };
     OnUploadRertyResumeListener RetryResumeCallbackFunc = ^{
         NSLog(@"upload retry end callback.");
-        
     };
     OnUploadStartedListener UploadStartedCallbackFunc = ^(UploadFileInfo* fileInfo) {
         NSLog(@"pload upload started callback.");
@@ -171,13 +173,26 @@ return __singleton__; \
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
-        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:NSLocalizedString(@"release_rules", nil) message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][@"explainContent"] sureBtn:NSLocalizedString(@"i_know", nil) cancleBtn:@""];
+        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:NSLocalizedString(@"release_rules", nil) message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][[self releaseSelect:CurUser.appLanguage]] sureBtn:NSLocalizedString(@"i_know", nil) cancleBtn:@""];
         xlAlertView.resultIndex = ^(NSInteger index){
         };
         [xlAlertView showXLAlertView];
     } failure:^(NSDictionary *failureDict) {
     }];
 }
+
+-(NSString *)releaseSelect:(NSString *)releaseRlue{
+    
+    if([releaseRlue isEqual:@"en"]){
+        return  @"explainContentEn";
+    }else if([releaseRlue isEqual:@"zh"]){
+        return  @"explainContent";
+    }else if([releaseRlue isEqual:@"TW"]){
+        return  @"explainContentTw";
+    }
+    return @"explainContent";
+}
+
 
 #pragma mark---delegate
 - (void)cb_confirmReturnValue:(NSArray *)valueArr groupId:(NSArray *)groupIdArr{
@@ -350,7 +365,7 @@ return __singleton__; \
 }
 - (void)hideHud
 {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self->hud hideAnimated:YES];
     });
 }
@@ -380,8 +395,6 @@ return __singleton__; \
      }
 }
 
-
-
 - (void)loadDate{
     [self showHud:NSLocalizedString(@"loading", nil)];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
@@ -392,7 +405,7 @@ return __singleton__; \
             NSMutableArray *categoryList = [[NSMutableArray alloc]init];
             self->shortVideoCategoryList = resultDict[@"data"][@"shortVideoCategoryList"];
             for (int i = 0;i < self->shortVideoCategoryList.count; i++) {
-                [categoryList addObject:self->shortVideoCategoryList[i][@"title"]];
+                [categoryList addObject:self->shortVideoCategoryList[i][[self appLanguageSelect:CurUser.appLanguage]]];
             }
             [self creatUI:categoryList];
             
@@ -400,6 +413,18 @@ return __singleton__; \
         }
     } failure:^(NSDictionary *failureDict) {
     }];
+}
+
+-(NSString *)appLanguageSelect:(NSString *)appLanguage{
+    
+    if([appLanguage isEqual:@"en"]){
+        return  @"titleEn";
+    }else if([appLanguage isEqual:@"zh"]){
+        return  @"title";
+    }else if([appLanguage isEqual:@"TW"]){
+        return  @"titleZhTw";
+    }
+    return @"title";
 }
 
 - (void)replaceCoverBtnAct{
@@ -466,6 +491,9 @@ return __singleton__; \
         [self hideHud];
     }];
 }
-
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [self.navigationController setNavigationBarHidden:YES animated:NO];
+}
 
 @end

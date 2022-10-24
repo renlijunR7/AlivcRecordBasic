@@ -4,7 +4,7 @@
 ///alertView  宽
 #define AlertW 320
 ///各个栏目之间的距离
-#define XLSpace 10.0
+#define XLSpace 15.0
 
 @interface XLAlertView()
 
@@ -55,10 +55,10 @@
         
         if (message) {
             
-            self.msgLbl = [self GetAdaptiveLable:CGRectMake(XLSpace, CGRectGetMaxY(self.titleLbl.frame)+XLSpace, AlertW-2*XLSpace, 20) AndText:message andIsTitle:NO];
+            self.msgLbl = [self GetAdaptiveLable:CGRectMake(XLSpace, CGRectGetMaxY(self.titleLbl.frame)+XLSpace, AlertW-2*XLSpace, XLSpace) AndText:message andIsTitle:NO];
             self.msgLbl.textColor = [UIColor blackColor];
-            self.msgLbl.textAlignment = NSTextAlignmentCenter;
-           
+            self.msgLbl.textAlignment = NSTextAlignmentLeft;
+            self.msgLbl.font = [UIFont systemFontOfSize:15.0];
             [self.alertView addSubview:self.msgLbl];
             
             CGFloat msgW = self.msgLbl.bounds.size.width;
@@ -213,7 +213,7 @@
     if (isTitle) {
         contentLbl.font = [UIFont boldSystemFontOfSize:16.0];
     }else{
-        contentLbl.font = [UIFont systemFontOfSize:14.0];
+        contentLbl.font = [UIFont systemFontOfSize:15.0];
     }
     
     NSMutableAttributedString *mAttrStr = [[NSMutableAttributedString alloc] initWithString:contentStr];

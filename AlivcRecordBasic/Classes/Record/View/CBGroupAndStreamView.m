@@ -128,14 +128,17 @@
     CGSize size = [self sizeWidthWidth:titleStr font:_titleTextFont maxHeight:_titleLabHeight];
     label.width = size.width;
     label.textColor = _titleTextColor;
-    
-    // 改变部分字体大小
-    NSMutableAttributedString *str  = [[NSMutableAttributedString alloc] initWithString:titleStr];
-    [str addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:16] range:NSMakeRange(0,4)];
-    [str addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:13] range:NSMakeRange(4,5)];
-    label.attributedText = str;
-
     [self.scroller addSubview:label];
+    
+
+    UILabel *labelDsc = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(label.frame)+10, frame.size.height + frame.origin.y + 10, 0, _titleLabHeight)];
+    labelDsc.font = [UIFont systemFontOfSize:13];
+    labelDsc.text = NSLocalizedString(@"video_chose", nil);
+    CGSize size1 = [self sizeWidthWidth:NSLocalizedString(@"video_chose", nil) font:_titleTextFont maxHeight:_titleLabHeight];
+    labelDsc.width = size1.width;
+    labelDsc.textColor = [UIColor lightGrayColor];
+    [self.scroller addSubview:labelDsc];
+    
 
     __block CGRect rect = CGRectZero;
     __block CGFloat butHeight = _butHeight;
@@ -156,7 +159,7 @@
         [self.scroller addSubview:but];
         
         but.layer.borderColor = rgba(78, 76, 86, 1).CGColor;//设置边框颜色
-        but.layer.borderWidth = 1;//设置边框宽度
+        but.layer.borderWidth = 0.5;//设置边框宽度
         but.titleLabel.font = _font;
 
         //九宫格算法，每行放三个 margainX+(i%3)*(butWidth + 10)  margainY+(i/3)*(butHeight+10)
@@ -252,17 +255,11 @@
  */
 - (void)butClick:(UIButton *)sender{
 
-    if (tempSaveArr.count >4) {
-        
-    }else{
-        sender.selected = !sender.selected;
-        if (_singleFlagArr.count > 0) {
-            [_singleFlagArr[sender.tag / 100] isEqual:@1] ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
-            return;
-        }
-        _isSingle ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
-        
+    if (_singleFlagArr.count > 0) {
+        [_singleFlagArr[sender.tag / 100] isEqual:@1] ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
+        return;
     }
+    _isSingle ? [self contentSignalWith:sender] : [self contentMultipleWith:sender];
 }
 
 #pragma mark---单选
@@ -303,7 +300,7 @@
 
 #pragma mark---多选
 - (void)contentMultipleWith:(UIButton *)sender{
-
+    
     NSString * valueStr = @"";
     tempSaveArr = nil;
     if (self.saveSelButValueArr.count > 0) {
@@ -311,11 +308,17 @@
     }else{
         tempSaveArr = [[NSMutableArray alloc] init];
     }
-
-    //valueStr = [NSString stringWithFormat:@"%ld/%@",sender.tag % 100 - 1,self.dataSourceArr[sender.tag / 100][sender.tag % 100 - 1]];
-    valueStr = [NSString stringWithFormat:@"%ld",sender.tag % 100 - 1];
     
+    NSLog(@"选取的数量 ==== %ld",tempSaveArr.count);
 
+    if (tempSaveArr.count < 5) {
+        sender.selected = !sender.selected;
+    }else{
+        sender.selected = NO;
+    }
+    
+    valueStr = [NSString stringWithFormat:@"%ld",sender.tag % 100 - 1];
+     
     if (sender.selected) {
         //sender.backgroundColor = _selColor;
         sender.layer.borderColor = _selColor.CGColor;
@@ -327,7 +330,7 @@
         //sender.backgroundColor = _norColor;
         [tempSaveArr removeObject:valueStr];
     }
-
+    
     [self.saveSelButValueArr replaceObjectAtIndex:sender.tag / 100 withObject:tempSaveArr?tempSaveArr:@""];
     //保存groupID
     [self.saveSelButValueArr[sender.tag / 100] count] == 0 ? [self.saveGroupIndexArr replaceObjectAtIndex:sender.tag / 100 withObject:@""] : [self.saveGroupIndexArr replaceObjectAtIndex:sender.tag / 100 withObject:[NSNumber numberWithInteger:sender.tag / 100]];
