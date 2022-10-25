@@ -8,10 +8,12 @@
 
 #import "CBGroupAndStreamView.h"
 #import "UIView+CBExtension.h"
+#import "BLUser.h"
 
 #define ScreenWidth  [UIScreen mainScreen].bounds.size.width
 #define ScreenHeight  [UIScreen mainScreen].bounds.size.height
 #define CBColor(r,g,b) [UIColor colorWithRed:r / 255.0 green:g / 255.0 blue:b / 255.0 alpha:1]
+#define CurUser         [BLUser sharedInstance]
 
 @interface CBGroupAndStreamView()
 {
@@ -133,8 +135,8 @@
 
     UILabel *labelDsc = [[UILabel alloc] initWithFrame:CGRectMake(CGRectGetMaxX(label.frame)+10, frame.size.height + frame.origin.y + 10, 0, _titleLabHeight)];
     labelDsc.font = [UIFont systemFontOfSize:13];
-    labelDsc.text = NSLocalizedString(@"video_chose", nil);
-    CGSize size1 = [self sizeWidthWidth:NSLocalizedString(@"video_chose", nil) font:_titleTextFont maxHeight:_titleLabHeight];
+    labelDsc.text = [CurUser.appLanguage isEqual:@"zh-TW"]?@"(可多選)":NSLocalizedString(@"video_chose", nil) ;
+    CGSize size1 = [self sizeWidthWidth:[CurUser.appLanguage isEqual:@"zh-TW"]?@"(可多選)":NSLocalizedString(@"video_chose", nil) font:_titleTextFont maxHeight:_titleLabHeight];
     labelDsc.width = size1.width;
     labelDsc.textColor = [UIColor lightGrayColor];
     [self.scroller addSubview:labelDsc];

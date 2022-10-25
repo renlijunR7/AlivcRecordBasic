@@ -548,7 +548,7 @@
 - (UILabel *)durationLabel {
     if (!_durationLabel) {
         _durationLabel = [[UILabel alloc] init];
-        _durationLabel.bounds = CGRectMake(0, 0, 100, 10);
+        _durationLabel.bounds = CGRectMake(0, 0, 100, 20);
         int a = _belowiPhone4s ? 98 : 10;
         CGPoint p = CGPointMake(ScreenWidth / 2.f, ScreenWidth * 4/3.f - a);
         _durationLabel.center = p;

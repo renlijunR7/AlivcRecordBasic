@@ -59,10 +59,11 @@
             self.msgLbl.textColor = [UIColor blackColor];
             self.msgLbl.textAlignment = NSTextAlignmentLeft;
             self.msgLbl.font = [UIFont systemFontOfSize:15.0];
+            self.msgLbl.lineBreakMode = NSLineBreakByWordWrapping | NSLineBreakByTruncatingTail;
+
             [self.alertView addSubview:self.msgLbl];
-            
             CGFloat msgW = self.msgLbl.bounds.size.width;
-            CGFloat msgH = self.msgLbl.bounds.size.height;
+            CGFloat msgH = self.msgLbl.bounds.size.height+25;
             
             self.msgLbl.frame = self.titleLbl?CGRectMake((AlertW-msgW)/2, CGRectGetMaxY(self.titleLbl.frame)+XLSpace, msgW, msgH):CGRectMake((AlertW-msgW)/2, 2*XLSpace, msgW, msgH);
         }
@@ -174,6 +175,7 @@
     
     return self;
 }
+
 
 #pragma mark - 弹出 -
 - (void)showXLAlertView

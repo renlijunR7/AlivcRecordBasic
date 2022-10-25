@@ -17,7 +17,6 @@
 #import "HttpPresenter.h"
 #import "BLUser.h"
 #import "MBProgressHUD.h"
-#import "MBProgressHUD+AlivcHelper.h"
 #import "AFHTTPSessionManager.h"
 #import "CBToast.h"
 
@@ -122,7 +121,7 @@ return __singleton__; \
         [self hideHud];
         
         NSLog(@"upload finished callback videoid:%@, imageurl:%@", result.videoId, result.imageUrl);
-        [CBToast showToast:NSLocalizedString(@"uploaded_success", nil) location:@"" showTime:1.0];
+        [CBToast showToast:[CurUser.appLanguage isEqual:@"zh-TW"]?@"視頻上傳成功":NSLocalizedString(@"uploaded_success", nil) location:@"" showTime:1.0];
         
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -151,7 +150,7 @@ return __singleton__; \
     OnUploadStartedListener UploadStartedCallbackFunc = ^(UploadFileInfo* fileInfo) {
         NSLog(@"pload upload started callback.");
         //设置上传地址和上传凭证
-        [self showHud:NSLocalizedString(@"upload_video", nil)];
+        [self showHud:[CurUser.appLanguage isEqual:@"zh-TW"]?@"視頻上傳中":NSLocalizedString(@"upload_video", nil)];
         [weakSelf.uploader setUploadAuthAndAddress:fileInfo uploadAuth:weakSelf.uploadAuth uploadAddress:weakSelf.uploadAddress];
     };
     
@@ -173,7 +172,7 @@ return __singleton__; \
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoUploadAwardConfig  postParams:Params success:^(NSDictionary *resultDict) {
-        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:NSLocalizedString(@"release_rules", nil) message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][[self releaseSelect:CurUser.appLanguage]] sureBtn:NSLocalizedString(@"i_know", nil) cancleBtn:@""];
+        XLAlertView *xlAlertView = [[XLAlertView alloc] initWithTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"發布規則":NSLocalizedString(@"release_rules", nil) message:resultDict[@"data"][@"shortVideoUploadAwardConfig"][[self releaseSelect:CurUser.appLanguage]] sureBtn:NSLocalizedString(@"i_know", nil) cancleBtn:@""];
         xlAlertView.resultIndex = ^(NSInteger index){
         };
         [xlAlertView showXLAlertView];
@@ -187,8 +186,8 @@ return __singleton__; \
         return  @"explainContentEn";
     }else if([releaseRlue isEqual:@"zh"]){
         return  @"explainContent";
-    }else if([releaseRlue isEqual:@"TW"]){
-        return  @"explainContentTw";
+    }else if([releaseRlue isEqual:@"zh-TW"]){
+        return  @"explainContentZhTw";
     }
     return @"explainContent";
 }
@@ -232,7 +231,7 @@ return __singleton__; \
     self.navigationController.view.backgroundColor =[UIColor blackColor];
     
     UIButton * rightBut = [UIButton buttonWithType:UIButtonTypeCustom];
-    [rightBut setTitle:NSLocalizedString(@"rules", nil) forState:UIControlStateNormal];
+    [rightBut setTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"發布":NSLocalizedString(@"rules", nil) forState:UIControlStateNormal];
     [rightBut setFrame:CGRectMake(0, 0, 40, 40)];
     [rightBut setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     rightBut.titleLabel.font = [UIFont systemFontOfSize:14];
@@ -249,7 +248,7 @@ return __singleton__; \
     [_scrView addSubview:_textPush];
     
     _uilabel = [[UILabel alloc]initWithFrame:CGRectMake(10 ,10,200, 20)];
-    _uilabel.text = NSLocalizedString(@"add_words", nil);
+    _uilabel.text = [CurUser.appLanguage isEqual:@"zh-TW"]?@"可添加300個文字,我想說":NSLocalizedString(@"add_words", nil);
     _uilabel.font = [UIFont systemFontOfSize:15];
     _uilabel.textColor = [UIColor whiteColor];
     _uilabel.enabled = NO;
@@ -260,14 +259,14 @@ return __singleton__; \
     _pushBtn.layer.cornerRadius = 6;
     _pushBtn.layer.masksToBounds = YES;
     [_pushBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_pushBtn setTitle:NSLocalizedString(@"release", nil) forState:UIControlStateNormal];
+    [_pushBtn setTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"發布":NSLocalizedString(@"release", nil) forState:UIControlStateNormal];
     [_pushBtn addTarget:self action:@selector(pushViedo) forControlEvents:UIControlEventTouchUpInside];
     _pushBtn.backgroundColor = [UIColor gradientColorWithSize:_pushBtn.frame.size
                                                     direction:GradientColorDirectionLevel
                                                    startColor:rgba(255, 111, 77, 1)
                                                      endColor:rgba(252, 24, 73, 1)];
     [self.view addSubview:_pushBtn];
-    NSArray * titleArr = @[NSLocalizedString(@"video_topics", nil)];
+    NSArray * titleArr = @[[CurUser.appLanguage isEqual:@"zh-TW"]?@"視頻話題":NSLocalizedString(@"video_topics", nil)];
     NSArray *contentArr = @[arrList];
     
     silde = [[CBGroupAndStreamView alloc] initWithFrame:CGRectMake(10, CGRectGetMaxY(_textPush.frame)+ 10, ScreenWidth-20,500)];
@@ -294,7 +293,7 @@ return __singleton__; \
     
     UIButton *replaceCoverBtn = [[UIButton alloc]initWithFrame:CGRectMake(20 ,CGRectGetMaxY(viedoImage.frame)+8, 100, 20)];
     replaceCoverBtn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-    [replaceCoverBtn setTitle:NSLocalizedString(@"replace_cover", nil) forState:UIControlStateNormal];
+    [replaceCoverBtn setTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"更缓葑缅":NSLocalizedString(@"replace_cover", nil) forState:UIControlStateNormal];
     [replaceCoverBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     replaceCoverBtn.titleLabel.font = [UIFont systemFontOfSize:14];
     [replaceCoverBtn addTarget:self action:@selector(replaceCoverBtnAct) forControlEvents:UIControlEventTouchUpInside];
@@ -324,9 +323,9 @@ return __singleton__; \
     NSLog(@"执行发布操作");
     
     if (dscrStr == nil || dscrStr.length == 0) {
-        [MBProgressHUD showMessage:NSLocalizedString(@"videoDescription", nil) inView:self.view];
+        [CBToast showToast:[CurUser.appLanguage isEqual:@"zh-TW"]?@"添加合適的視頻描述後在發布":NSLocalizedString(@"videoDescription", nil) location:@"" showTime:2.0];
     }else if(categoryListID.count == 0){
-        [MBProgressHUD showMessage:NSLocalizedString(@"videoTopic", nil) inView:self.view];
+        [CBToast showToast:[CurUser.appLanguage isEqual:@"zh-TW"]?@"請選擇視頻對應的話題後發布":NSLocalizedString(@"videoTopic", nil) location:@"" showTime:2.0];
     }else{
         NSMutableDictionary *DicParams = [[NSMutableDictionary alloc]init];
         [DicParams setValue:[NSString stringWithFormat:@"%@",dscrStr] forKey:@"description"];
@@ -373,7 +372,7 @@ return __singleton__; \
 -(void)textViewDidChange:(UITextView *)textView
 {
     if (_textPush.text.length == 0) {
-        _uilabel.text = NSLocalizedString(@"add_words", nil);
+        _uilabel.text = [CurUser.appLanguage isEqual:@"zh-TW"]?@"可添加300個文字,我想說":NSLocalizedString(@"add_words", nil);
     }else{
         _uilabel.text = @"";
     }
@@ -396,7 +395,9 @@ return __singleton__; \
 }
 
 - (void)loadDate{
-    [self showHud:NSLocalizedString(@"loading", nil)];
+    NSLog(@"语言===== %@",CurUser.appLanguage);
+    
+    [self showHud:[CurUser.appLanguage isEqual:@"zh-TW"]?@"加載中...":NSLocalizedString(@"loading", nil)];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:@{
     }];
     [HttpApi PostApiAddress:queryShortVideoCategoryList  postParams:Params success:^(NSDictionary *resultDict) {
@@ -416,12 +417,11 @@ return __singleton__; \
 }
 
 -(NSString *)appLanguageSelect:(NSString *)appLanguage{
-    
     if([appLanguage isEqual:@"en"]){
         return  @"titleEn";
     }else if([appLanguage isEqual:@"zh"]){
         return  @"title";
-    }else if([appLanguage isEqual:@"TW"]){
+    }else if([appLanguage isEqual:@"zh-TW"]){
         return  @"titleZhTw";
     }
     return @"title";
@@ -430,15 +430,15 @@ return __singleton__; \
 - (void)replaceCoverBtnAct{
     NSLog(@"更换封面");
     
-    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"select_method", nil) message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"camera", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertController *alterConroller = [UIAlertController alertControllerWithTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"請選擇方式":NSLocalizedString(@"select_method", nil) message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"照相機":NSLocalizedString(@"camera", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self openCamera];
     }];
-    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"photo_album", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *albumAction = [UIAlertAction actionWithTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"相冊":NSLocalizedString(@"photo_album", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         [self openAlbum];
     }];
     
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"cancel", nil) style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:[CurUser.appLanguage isEqual:@"zh-TW"]?@"取消":NSLocalizedString(@"cancel", nil) style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
     }];
     
     [alterConroller addAction:cameraAction];
@@ -480,7 +480,7 @@ return __singleton__; \
         @"img":img,
         @"type":@"2",
     };
-    [self showHud:NSLocalizedString(@"loading", nil)];
+    [self showHud:[CurUser.appLanguage isEqual:@"zh-TW"]?@"加載中...":NSLocalizedString(@"loading", nil)];
     NSMutableDictionary *Params = [NSMutableDictionary dictionaryWithDictionary:DicParams];
     [HttpApi ImagePostApiAddress:getUploadImg  postParams:Params success:^(NSDictionary *resultDict) {
         NSLog(@"图片上传成功数据 ====%@",resultDict);
@@ -494,6 +494,10 @@ return __singleton__; \
 - (void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
+}
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [self.navigationController setNavigationBarHidden:NO animated:NO];
 }
 
 @end
